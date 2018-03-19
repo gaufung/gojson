@@ -2,7 +2,7 @@ package gojson
 
 import "testing"
 
-func TestToken(t *testing.T){
+func TestToken(t *testing.T) {
 	i := END_DOCUMENT
 	if i != 0 {
 		t.Error("const error")

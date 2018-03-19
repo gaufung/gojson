@@ -1,7 +1,6 @@
 package gojson
 
 const (
-
 	END_DOCUMENT = iota
 
 	START_OBJECT

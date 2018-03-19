@@ -1,15 +1,15 @@
 package gojson
 
 import (
-	"testing"
-	"strings"
 	"fmt"
+	"strings"
+	"testing"
 )
 
-func TestCharReader(t *testing.T){
+func TestCharReader(t *testing.T) {
 
-	defer func(){
-		if r:= recover(); r!=nil{
+	defer func() {
+		if r := recover(); r != nil {
 			fmt.Printf("EOF")
 		}
 	}()
@@ -27,23 +27,23 @@ func TestCharReader(t *testing.T){
 	}
 
 	substring := reader.Next(5)
-	if substring != "A fox"{
+	if substring != "A fox" {
 		t.Error("Next() method failed")
 	}
 
 	nextChar := reader.Peek()
-	if nextChar != byte(' '){
+	if nextChar != byte(' ') {
 		t.Error("Peek failed")
 	}
 	substring = reader.Next(6)
-	if substring != " jumps"{
+	if substring != " jumps" {
 		t.Error("Next() method failed")
 	}
 	substring = reader.Next(18)
-	if substring != " over the lazy dog"{
+	if substring != " over the lazy dog" {
 		t.Error("Next() method failed")
 	}
-	if reader.HasMore(){
+	if reader.HasMore() {
 		t.Error("HasMore() method failed")
 	}
 	reader.Next(10)

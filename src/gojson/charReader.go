@@ -54,7 +54,7 @@ func (r *CharReader) Peek() byte {
 }
 
 func (r *CharReader) fillBuffer(eofErrorMessage interface{}) {
-	if n, err := r.reader.Read(r.buffer); err==nil {
+	if n, err := r.reader.Read(r.buffer); err == nil {
 		r.pos = 0
 		r.size = n
 		r.readed += n
