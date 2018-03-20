@@ -2,6 +2,7 @@ package gojson
 
 import (
 	"io"
+	"unicode/utf8"
 )
 
 type CharReader struct {
@@ -29,7 +30,7 @@ func (r *CharReader) HasMore() bool {
 }
 
 func (r *CharReader) Next(size int) string {
-	result := make([]byte, 0)
+	result := make([]rune, 0)
 	for size > 0 {
 		result = append(result, r.NextChar())
 		size--
@@ -37,7 +38,18 @@ func (r *CharReader) Next(size int) string {
 	return string(result)
 }
 
-func (r *CharReader) NextChar() byte {
+func (r *CharReader) NextChar() rune {
+	bytes := make([]byte, 0)
+	for {
+		bytes = append(bytes, r.NextByte())
+		if utf8.Valid(bytes) {
+			r, _ := utf8.DecodeRune(bytes)
+			return r
+		}
+	}
+}
+
+func (r *CharReader) NextByte() byte {
 	if r.pos == r.size {
 		r.fillBuffer("EOF")
 	}
@@ -46,11 +58,21 @@ func (r *CharReader) NextChar() byte {
 	return ch
 }
 
-func (r *CharReader) Peek() byte {
-	if r.pos == r.size {
-		r.fillBuffer("EOF")
+func (r *CharReader) Peek() rune {
+	idx := r.pos
+	bytes := make([]byte, 0)
+	for {
+		if idx == r.size {
+			r.fillBuffer("EOF")
+		}
+		bytes = append(bytes, r.buffer[idx])
+		if utf8.Valid(bytes) {
+			r, _ := utf8.DecodeRune(bytes)
+			return r
+		} else {
+			idx++
+		}
 	}
-	return r.buffer[r.pos]
 }
 
 func (r *CharReader) fillBuffer(eofErrorMessage interface{}) {

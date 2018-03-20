@@ -1,5 +1,7 @@
 package gojson
 
+type Token int
+
 const (
 	END_DOCUMENT = iota
 

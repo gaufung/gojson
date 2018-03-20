@@ -14,38 +14,37 @@ func TestCharReader(t *testing.T) {
 		}
 	}()
 
-	stringReader := strings.NewReader("A fox jumps over the lazy dog")
-
+	stringReader := strings.NewReader("语言A fox jumps over the lazy dogΦx")
 	reader := NewCharReader(stringReader)
-
 	if reader == nil {
 		t.Error("construct failed")
 	}
-
 	if !reader.HasMore() {
 		t.Error("HasMore() methods failed")
 	}
-
-	substring := reader.Next(5)
-	if substring != "A fox" {
+	substring := reader.NextChar()
+	if substring != '语' {
+		t.Error(substring)
 		t.Error("Next() method failed")
 	}
-
 	nextChar := reader.Peek()
-	if nextChar != byte(' ') {
+	if nextChar != '言' {
 		t.Error("Peek failed")
 	}
-	substring = reader.Next(6)
-	if substring != " jumps" {
-		t.Error("Next() method failed")
+	nextChar = reader.NextChar()
+	if nextChar != '言' {
+		t.Error("NextChar() failed")
 	}
-	substring = reader.Next(18)
-	if substring != " over the lazy dog" {
+	nextChar = reader.NextChar()
+	if nextChar != 'A' {
+		t.Error("NextChar() failed")
+	}
+	str := reader.Next(30)
+	if str != " fox jumps over the lazy dogΦx" {
+
 		t.Error("Next() method failed")
 	}
 	if reader.HasMore() {
 		t.Error("HasMore() method failed")
 	}
-	reader.Next(10)
-	t.Errorf("Next() has failed")
 }
