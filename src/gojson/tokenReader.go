@@ -10,7 +10,7 @@ const (
 )
 
 type TokenReader struct {
-	reader CharReader
+	reader *CharReader
 }
 
 // is white space
@@ -28,26 +28,26 @@ func (t *TokenReader) readNextToken() Token {
 		if !t.isWhiteSpace(ch) {
 			break
 		}
-		t.reader.NextChar()
+		t.reader.Next()
 	}
 	switch ch {
 	case '{':
-		t.reader.NextChar() //skip
+		t.reader.Next() //skip
 		return START_OBJECT
 	case '}':
-		t.reader.NextChar() //skip
+		t.reader.Next() //skip
 		return END_OBJECT
 	case '[':
-		t.reader.NextChar() //skip
+		t.reader.Next() //skip
 		return START_ARRAY
 	case ']':
-		t.reader.NextChar() //skip
+		t.reader.Next() //skip
 		return END_ARRAY
 	case ':':
-		t.reader.NextChar() //skip
+		t.reader.Next() //skip
 		return COLON_SEPERATOR
 	case ',':
-		t.reader.NextChar() //skip
+		t.reader.Next() //skip
 		return COMA_SEPERATOR
 	case '"':
 		return STRING
@@ -68,14 +68,14 @@ func (t *TokenReader) readNextToken() Token {
 
 func (t *TokenReader) readString() string {
 	result := make([]rune, 0)
-	ch := t.reader.NextChar()
+	ch := t.reader.Next()
 	if ch != '"' {
 		panic(NewJsonParserError("Expected \" but actual is: ", t.reader.readed))
 	}
 	for {
-		ch = t.reader.NextChar()
+		ch = t.reader.Next()
 		if ch == '\\' {
-			ech := t.reader.NextChar()
+			ech := t.reader.Next()
 			switch ech {
 			case '"':
 				result = append(result, ech)
@@ -96,7 +96,7 @@ func (t *TokenReader) readString() string {
 			case 'u':
 				u := 0
 				for i := 0; i < 4; i++ {
-					uch := t.reader.NextChar()
+					uch := t.reader.Next()
 					if uch >= '0' && uch <= '9' {
 						u = (u << 4) + (int(uch) - int('0'))
 					} else if uch >= 'a' && uch <= 'f' {
@@ -123,7 +123,7 @@ func (t *TokenReader) readString() string {
 }
 
 func (t *TokenReader) readBoolean() bool {
-	ch := t.reader.NextChar()
+	ch := t.reader.Next()
 	expect := ""
 	if ch == 't' {
 		expect = "rue"
@@ -133,7 +133,7 @@ func (t *TokenReader) readBoolean() bool {
 		panic(NewJsonParserError("Unexpected char", t.reader.readed))
 	}
 	for _, c := range []rune(expect) {
-		theChar := t.reader.NextChar()
+		theChar := t.reader.Next()
 		if theChar != c {
 			panic(NewJsonParserError("Unexpected char", t.reader.readed))
 		}
@@ -144,7 +144,7 @@ func (t *TokenReader) readBoolean() bool {
 func (t *TokenReader) readNull() {
 	expect := "null"
 	for _, c := range []rune(expect) {
-		theChar := t.reader.NextChar()
+		theChar := t.reader.Next()
 		if theChar != c {
 			panic(NewJsonParserError("Unexpected char", t.reader.readed))
 		}
@@ -158,7 +158,7 @@ func (t *TokenReader) readNumber() *Number {
 	minusSign := ch == '-'
 	expMinusSign := false
 	if minusSign {
-		t.reader.NextChar()
+		t.reader.Next()
 	}
 	status := READ_NUMBER_INT_PART
 	for {
@@ -170,21 +170,21 @@ func (t *TokenReader) readNumber() *Number {
 		switch status {
 		case READ_NUMBER_INT_PART:
 			if ch >= '0' && ch <= '9' {
-				intPart = append(intPart, t.reader.NextChar())
+				intPart = append(intPart, t.reader.Next())
 			} else if ch == '.' {
 				if len(intPart) == 0 {
 					panic(NewJsonParserError("Unexpected char", t.reader.readed))
 				}
-				t.reader.NextChar()
+				t.reader.Next()
 				hasFraPart = true
 				status = READ_NUMBER_FRA_PART
 			} else if ch == 'e' || ch == 'E' {
-				t.reader.NextChar()
+				t.reader.Next()
 				hasExpPart = true
 				signChar := t.reader.Peek()
 				if signChar == '-' || signChar == '+' {
 					expMinusSign = signChar == '-'
-					t.reader.NextChar()
+					t.reader.Next()
 				}
 				status = READ_NUMBER_EXP_PART
 			} else {
@@ -196,14 +196,14 @@ func (t *TokenReader) readNumber() *Number {
 			continue
 		case READ_NUMBER_FRA_PART:
 			if ch >= '0' && ch <= '9' {
-				fraPart = append(fraPart, t.reader.NextChar())
+				fraPart = append(fraPart, t.reader.Next())
 			} else if ch == 'e' || ch == 'E' {
-				t.reader.NextChar()
+				t.reader.Next()
 				hasExpPart = true
 				signChar := t.reader.Peek()
 				if signChar == '-' || signChar == '+' {
 					expMinusSign = signChar == '-'
-					t.reader.NextChar()
+					t.reader.Next()
 				}
 				status = READ_NUMBER_EXP_PART
 			} else {
@@ -215,7 +215,7 @@ func (t *TokenReader) readNumber() *Number {
 			continue
 		case READ_NUMBER_EXP_PART:
 			if ch >= '0' && ch <= '9' {
-				expPart = append(expPart, t.reader.NextChar())
+				expPart = append(expPart, t.reader.Next())
 			} else {
 				if len(expPart) == 0 {
 					panic(NewJsonParserError("Unexpected char", t.reader.readed))
@@ -259,6 +259,9 @@ func (t *TokenReader) readNumber() *Number {
 				number = (float64(lint) + dFraPart) * math.Pow(10.0, float64(index))
 			} else {
 				number = float64(lint) + dFraPart
+			}
+			if number > MAX_SAFE_DOUBLE {
+				panic(NewJsonParserError("Exceeded maximum value", t.reader.readed))
 			}
 			return NewNumber(number)
 		}

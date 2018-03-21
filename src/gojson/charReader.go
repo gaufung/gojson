@@ -29,16 +29,16 @@ func (r *CharReader) HasMore() bool {
 	}
 }
 
-func (r *CharReader) Next(size int) string {
+func (r *CharReader) NextString(size int) string {
 	result := make([]rune, 0)
 	for size > 0 {
-		result = append(result, r.NextChar())
+		result = append(result, r.Next())
 		size--
 	}
 	return string(result)
 }
 
-func (r *CharReader) NextChar() rune {
+func (r *CharReader) Next() rune {
 	bytes := make([]byte, 0)
 	for {
 		bytes = append(bytes, r.NextByte())

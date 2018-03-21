@@ -22,7 +22,7 @@ func TestCharReader(t *testing.T) {
 	if !reader.HasMore() {
 		t.Error("HasMore() methods failed")
 	}
-	substring := reader.NextChar()
+	substring := reader.Next()
 	if substring != '语' {
 		t.Error(substring)
 		t.Error("Next() method failed")
@@ -31,15 +31,15 @@ func TestCharReader(t *testing.T) {
 	if nextChar != '言' {
 		t.Error("Peek failed")
 	}
-	nextChar = reader.NextChar()
+	nextChar = reader.Next()
 	if nextChar != '言' {
 		t.Error("NextChar() failed")
 	}
-	nextChar = reader.NextChar()
+	nextChar = reader.Next()
 	if nextChar != 'A' {
 		t.Error("NextChar() failed")
 	}
-	str := reader.Next(30)
+	str := reader.NextString(30)
 	if str != " fox jumps over the lazy dogΦx" {
 
 		t.Error("Next() method failed")

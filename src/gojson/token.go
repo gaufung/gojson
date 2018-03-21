@@ -3,25 +3,25 @@ package gojson
 type Token int
 
 const (
-	END_DOCUMENT = iota
+	END_DOCUMENT = iota // 0
 
-	START_OBJECT
+	START_OBJECT        // 1
 
-	END_OBJECT
+	END_OBJECT          // 2
 
-	START_ARRAY
+	START_ARRAY         // 3
 
-	END_ARRAY
+	END_ARRAY           // 4
 
-	COLON_SEPERATOR
+	COLON_SEPERATOR     // 5
 
-	COMA_SEPERATOR
+	COMA_SEPERATOR      // 6
 
-	STRING
+	STRING              // 7
 
-	BOOLEAN
+	BOOLEAN             // 8
 
-	NUMBER
+	NUMBER              // 9
 
-	NULL
+	NULL                // 10
 )
