@@ -17,11 +17,11 @@ func TestStackValue(t *testing.T) {
 	}
 
 	s1 := NewJsonObjectFromObject(1)
-	if s1.value.(int) != 1 || s1.Kind != TYPE_OBJECT {
+	if s1.Value.(int) != 1 || s1.Kind != TYPE_OBJECT {
 		t.Error("NewJsonObjectFromObject() failed")
 	}
 	s2 := NewJsonObjectFromKey("key")
-	if s2.ValueAsKey() != "key" || s2.value.(string) != "key" || s2.Kind != TYPE_OBJECT_KEY {
+	if s2.ValueAsKey() != "key" || s2.Value.(string) != "key" || s2.Kind != TYPE_OBJECT_KEY {
 		t.Error("NewJsonObjectFromKey() failed")
 	}
 	arr := []interface{}{1, 2, 3, 4}
@@ -30,7 +30,7 @@ func TestStackValue(t *testing.T) {
 		t.Error("NewJsonObjectFromSlice() failed")
 	}
 	s4 := NewJsonObjectFromSingle(123)
-	if s4.Kind != TYPE_SINGLE || s4.value.(int) != 123 {
+	if s4.Kind != TYPE_SINGLE || s4.Value.(int) != 123 {
 		t.Error("NewJsonObjectFromSingle() failed")
 	}
 

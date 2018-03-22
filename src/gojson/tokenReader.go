@@ -151,7 +151,7 @@ func (t *TokenReader) readNull() {
 	}
 }
 
-func (t *TokenReader) readNumber() *Number {
+func (t *TokenReader) readNumber() float64 {
 	intPart, fraPart, expPart := make([]rune, 0), make([]rune, 0), make([]rune, 0)
 	hasFraPart, hasExpPart := false, false
 	ch := t.reader.Peek()
@@ -235,7 +235,7 @@ func (t *TokenReader) readNumber() *Number {
 				lint = string2long(intPart, readed)
 			}
 			if hasExpPart && len(expPart) == 0 {
-				return NewNumber(lint)
+				return float64(lint)
 			}
 			if hasFraPart && len(fraPart) == 0 {
 				panic(NewJsonParserError("Unexpected char", t.reader.readed))
@@ -263,10 +263,9 @@ func (t *TokenReader) readNumber() *Number {
 			if number > MAX_SAFE_DOUBLE {
 				panic(NewJsonParserError("Exceeded maximum value", t.reader.readed))
 			}
-			return NewNumber(number)
+			return number
 		}
 	}
-
 }
 
 var MAX_SAFE_INTEGER = int64(9007199254740991)

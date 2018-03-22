@@ -15,33 +15,33 @@ func (s *Stack) IsEmpty() bool {
 	return s.pos == 0
 }
 
-func (s *Stack) Push(obj *StackValue) error {
+func (s *Stack) Push(obj *StackValue) bool {
 	if s.pos == s.Size {
-		return NewStackOverflowError("Maximum depth reached when parse JSON string")
+		return false
 	}
 	s.array[s.pos] = obj
 	s.pos++
-	return nil
+	return true
 }
 
-func (s *Stack) Pop() (*StackValue, error) {
+func (s *Stack) Pop() (*StackValue, bool) {
 	if s.IsEmpty() {
-		return nil, NewEmptyStackError("The stack is empty")
+		return nil, false
 	}
 	s.pos--
-	return s.array[s.pos], nil
+	return s.array[s.pos], true
 }
 
-func (s *Stack) PopKind(kind int) (*StackValue, error) {
+func (s *Stack) PopKind(kind int) (*StackValue, bool) {
 	if s.IsEmpty() {
-		return nil, NewEmptyStackError("The stack is empty")
+		return nil, false
 	}
 	s.pos--
 	obj := s.array[s.pos]
 	if obj.Kind == kind {
-		return obj, nil
+		return obj, true
 	} else {
-		return nil, NewJsonParserError("unmatched object or empty", 1)
+		return nil, false
 	}
 }
 
@@ -50,13 +50,13 @@ func (s *Stack) GetTopValueType() int {
 	return obj.Kind
 }
 
-func (s *Stack) Peek(kind int) (*StackValue, error) {
+func (s *Stack) Peek(kind int) (*StackValue, bool) {
 	if s.IsEmpty() {
-		return nil, NewEmptyStackError("The stack is empty")
+		return nil, false
 	}
 	obj := s.array[s.pos-1]
 	if obj.Kind == kind {
-		return obj, nil
+		return obj, true
 	}
-	return nil, NewJsonParserError("Unmatched object or array.", 0)
+	return nil, false
 }

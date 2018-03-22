@@ -2,3 +2,4 @@
 *.iml
 bin/
 pkg/
+src/debugger.go

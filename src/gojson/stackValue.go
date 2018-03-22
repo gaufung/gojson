@@ -9,37 +9,37 @@ const (
 
 type StackValue struct {
 	Kind  int
-	value interface{}
+	Value interface{}
 }
 
 func NewJsonObjectFromObject(obj interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_OBJECT, value: obj}
+	return &StackValue{Kind: TYPE_OBJECT, Value: obj}
 }
 
 func NewJsonObjectFromMap(m map[string]interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_OBJECT, value: m}
+	return &StackValue{Kind: TYPE_OBJECT, Value: m}
 }
 
 func NewJsonObjectFromKey(key string) *StackValue {
-	return &StackValue{Kind: TYPE_OBJECT_KEY, value: key}
+	return &StackValue{Kind: TYPE_OBJECT_KEY, Value: key}
 }
 
 func NewJsonObjectFromSlice(arr []interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_ARRAY, value: arr}
+	return &StackValue{Kind: TYPE_ARRAY, Value: arr}
 }
 
 func NewJsonObjectFromSingle(obj interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_SINGLE, value: obj}
+	return &StackValue{Kind: TYPE_SINGLE, Value: obj}
 }
 
 func (s *StackValue) ValueAsKey() string {
-	return s.value.(string)
+	return s.Value.(string)
 }
 
 func (s *StackValue) ValueAsObject() map[string]interface{} {
-	return s.value.(map[string]interface{})
+	return s.Value.(map[string]interface{})
 }
 
 func (s *StackValue) ValueAsArray() []interface{} {
-	return s.value.([]interface{})
+	return s.Value.([]interface{})
 }
