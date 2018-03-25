@@ -27,7 +27,7 @@ type JsonStream struct {
 
 func NewJsonStreamFromReader(r io.Reader) *JsonStream {
 	return &JsonStream{
-		reader: &TokenReader{NewCharReader(r)},
+		reader: &TokenReader{newCharReader(r)},
 	}
 }
 func NewJsonStreamFromTokenReader(r *TokenReader) *JsonStream {

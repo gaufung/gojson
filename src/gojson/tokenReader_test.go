@@ -7,7 +7,7 @@ import (
 
 func TestTokenReader1(t *testing.T) {
 	var json = `{"language": "golang", "version":1.9}`
-	reader := NewCharReader(strings.NewReader(json))
+	reader := newCharReader(strings.NewReader(json))
 	r := &TokenReader{reader}
 	if !r.isWhiteSpace('\t') || !r.isWhiteSpace('\n') || !r.isWhiteSpace(' ') || !r.isWhiteSpace('\r') {
 		t.Error("isWhiteSpace() failed")
@@ -52,7 +52,7 @@ func TestTokenReader1(t *testing.T) {
 
 func TestTokeReader2(t *testing.T) {
 	var json = `{"isread": false, "company": [1, 2.5, 3], "leader": null}`
-	reader := NewCharReader(strings.NewReader(json))
+	reader := newCharReader(strings.NewReader(json))
 	r := &TokenReader{reader}
 	if r.readNextToken() != START_OBJECT {
 		t.Error("read START_OBJECT failed")
