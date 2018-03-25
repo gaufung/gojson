@@ -1,0 +1,39 @@
+Json Productions
+
+0. S -> Object
+
+1. Object -> { Items }
+
+2. Items ->   Item
+            | Item, Items
+            |
+
+3. Item -> Key : Value
+
+4. Key -> String
+
+5. Value ->   String
+            | Number
+            | Null
+            | Boolean
+            | Array
+            | Object
+
+6. STRING -> "Alphabets"
+
+7. Alphabets ->  Alphabet
+                | Alphabet Alphabets
+                |
+
+8. Number -> digits
+
+9. Null -> null
+
+10. Boolean ->   true
+               | false
+
+11. Array -> [ Elements ]
+
+12. Elements ->   Value
+                | Value, Elements
+                |
