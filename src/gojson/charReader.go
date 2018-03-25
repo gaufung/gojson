@@ -49,6 +49,18 @@ func (r *CharReader) Next() rune {
 	}
 }
 
+func (r *CharReader) BackWord() {
+	index := 1
+	for {
+		if utf8.Valid(r.buffer[r.pos-index:r.pos]){
+			r.pos = r.pos -index
+			return
+		}else{
+			index++
+		}
+	}
+}
+
 func (r *CharReader) NextByte() byte {
 	if r.pos == r.size {
 		r.fillBuffer("EOF")

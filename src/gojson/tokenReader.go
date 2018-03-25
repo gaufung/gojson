@@ -1,6 +1,9 @@
 package gojson
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 const (
 	READ_NUMBER_INT_PART = iota
@@ -11,6 +14,10 @@ const (
 
 type TokenReader struct {
 	reader *CharReader
+}
+
+func NewTokenReaderFromString(s string) *TokenReader {
+	return &TokenReader{NewCharReader(strings.NewReader(s))}
 }
 
 // is white space
@@ -265,6 +272,18 @@ func (t *TokenReader) readNumber() float64 {
 			}
 			return number
 		}
+	}
+}
+
+func (t *TokenReader) BackToken() {
+	t.reader.BackWord()
+}
+
+func (t *TokenReader) IsEmpty() bool {
+	if !t.reader.HasMore() {
+		return true
+	} else {
+		return false
 	}
 }
 
