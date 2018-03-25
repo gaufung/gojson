@@ -7,130 +7,256 @@ import (
 
 func TestTokenReader1(t *testing.T) {
 	var json = `{"language": "golang", "version":1.9}`
-	reader := NewCharReader(strings.NewReader(json))
+	reader := newCharReader(strings.NewReader(json))
 	r := &TokenReader{reader}
 	if !r.isWhiteSpace('\t') || !r.isWhiteSpace('\n') || !r.isWhiteSpace(' ') || !r.isWhiteSpace('\r') {
 		t.Error("isWhiteSpace() failed")
 	}
-	if r.readNextToken() != START_OBJECT {
+	if toke, err := r.readNextToken(); err!=nil{
 		t.Error("readNextToken() failed")
+	}else{
+		if toke!=START_OBJECT{
+			t.Error("readNextToken() failed")
+		}
 	}
-	if r.readNextToken() != STRING {
+	if toke, err := r.readNextToken(); err!=nil{
 		t.Error("readNextToken() failed")
+	}else{
+		if toke != STRING{
+			t.Error("readNextToken() failed")
+		}
 	}
-	if r.readString() != "language" {
+	if str, err := r.readString(); err!=nil{
 		t.Error("readString() failed")
+	}else{
+		if str!= "language"{
+			t.Error("readString() failed")
+		}
 	}
-	if r.readNextToken() != COLON_SEPERATOR {
-		t.Error("readNextToken() failed")
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("readToken() failed")
+	}else{
+		if token != COLON_SEPERATOR{
+			t.Error("readToken() failed")
+		}
 	}
-	if r.readNextToken() != STRING {
-		t.Error("readNextToken() failed")
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("readToken() failed")
+	}else{
+		if token != STRING{
+			t.Error("readToken() failed")
+		}
 	}
-	if r.readString() != "golang" {
-		t.Error("readNextToken() failed")
+	if str, err := r.readString(); err!=nil{
+		t.Error("readString() failed")
+	}else{
+		if str!= "golang"{
+			t.Error("readString() failed")
+		}
 	}
-	if r.readNextToken() != COMA_SEPERATOR {
-		t.Error("readNextToken() failed")
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("readToken() failed")
+	}else{
+		if token != COMA_SEPERATOR{
+			t.Error("readToken() failed")
+		}
 	}
-	if r.readNextToken() != STRING {
-		t.Error("readNextToken() failed")
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("readToken() failed")
+	}else{
+		if token != STRING{
+			t.Error("readToken() failed")
+		}
 	}
-	if r.readString() != "version" {
-		t.Error("readNextToken() failed")
+	if str, err := r.readString(); err!=nil{
+		t.Error("readString() failed")
+	}else{
+		if str!= "version"{
+			t.Error("readString() failed")
+		}
 	}
-	if r.readNextToken() != COLON_SEPERATOR {
-		t.Error("readNextToken() failed")
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("readToken() failed")
+	}else{
+		if token != COLON_SEPERATOR{
+			t.Error("readToken() failed--")
+		}
 	}
-	if r.readNextToken() != NUMBER {
-		t.Error("readNextToken() failed")
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("readToken() failed")
+	}else{
+		if token != NUMBER{
+			t.Error("readToken() failed--")
+		}
 	}
-	if r.readNumber() != float64(1.9) {
-		t.Error("readNumber() failed")
+	if number, err := r.readNumber(); err!=nil{
+		t.Error("read number failed")
+	}else{
+		if number != float64(1.9) {
+			t.Error("read number failed")
+		}
 	}
 }
 
 func TestTokeReader2(t *testing.T) {
-	var json = `{"isread": false, "company": [1, 2.5, 3], "leader": null}`
-	reader := NewCharReader(strings.NewReader(json))
+	var json = `{"isread": false, "company": [1, 2.5], "leader": null}`
+	reader := newCharReader(strings.NewReader(json))
 	r := &TokenReader{reader}
-	if r.readNextToken() != START_OBJECT {
-		t.Error("read START_OBJECT failed")
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != START_OBJECT{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != STRING {
-		t.Error("read STRING failed")
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != STRING{
+			t.Error("read token failed")
+		}
 	}
-	if r.readString() != "isread" {
-		t.Error(`read "isread" failed`)
+	if str, err := r.readString(); err!=nil{
+		t.Error("readString() failed")
+	}else{
+		if str!= "isread"{
+			t.Error("readString() failed")
+		}
 	}
-	if r.readNextToken() != COLON_SEPERATOR {
-		t.Error(`read COLON_SEPERATOR failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != COLON_SEPERATOR{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != BOOLEAN {
-		t.Error(`read BOOLEAN failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != BOOLEAN{
+			t.Error("read token failed")
+		}
 	}
-	if r.readBoolean() != false {
-		t.Error(`read false failed`)
+	if b, err := r.readBoolean(); err!=nil{
+		t.Error("read boolean failed")
+	}else{
+		if b!=false{
+			t.Error("read boolean failed")
+		}
 	}
-	if r.readNextToken() != COMA_SEPERATOR {
-		t.Error(`read COMA_SEPERATOR failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != COMA_SEPERATOR{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != STRING {
-		t.Error(`read STRING failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != STRING{
+			t.Error("read token failed")
+		}
 	}
-	if r.readString() != "company" {
-		t.Error(`read "company" failed`)
+	if str, err := r.readString(); err!=nil{
+		t.Error("readString() failed")
+	}else{
+		if str!= "company"{
+			t.Error("readString() failed")
+		}
 	}
-	if r.readNextToken() != COLON_SEPERATOR {
-		t.Error(`read COLON_SEPERATOR failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != COLON_SEPERATOR{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != START_ARRAY {
-		t.Error(`read START_ARRAY failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != START_ARRAY{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != NUMBER {
-		t.Error(`read NUMBER failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != NUMBER{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNumber() != 1 {
-		t.Error("read 1 failed")
+	if num, err := r.readNumber(); err!=nil{
+		t.Error("read number failed")
+	}else{
+		if num != float64(1){
+			t.Error("read number failed")
+		}
 	}
-	if r.readNextToken() != COMA_SEPERATOR {
-		t.Error("read COMA_SEPERATOR failed")
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != COMA_SEPERATOR{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != NUMBER {
-		t.Error(`read NUMBER failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != NUMBER{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNumber() != 2.5 {
-		t.Error("read 2.5 failed")
+	if num, err := r.readNumber(); err!=nil{
+		t.Error("read number failed")
+	}else{
+		if num != float64(2.5){
+			t.Error("read number failed")
+		}
 	}
-	if r.readNextToken() != COMA_SEPERATOR {
-		t.Error("read COMA_SEPERATOR failed")
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != END_ARRAY{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != NUMBER {
-		t.Error("read NUMBER failed")
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != COMA_SEPERATOR{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNumber() != 3 {
-		t.Error("read 2 failed")
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != STRING{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != END_ARRAY {
-		t.Error("read END_ARRAY failed")
+	if str, err := r.readString(); err!=nil{
+		t.Error("readString() failed")
+	}else{
+		if str!= "leader"{
+			t.Error("readString() failed")
+		}
 	}
-	if r.readNextToken() != COMA_SEPERATOR {
-		t.Error(`read COMA_SEPERATOR failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != COLON_SEPERATOR{
+			t.Error("read token failed")
+		}
 	}
-	if r.readNextToken() != STRING {
-		t.Error(`read STRING failed`)
+	if token, err := r.readNextToken();err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != NULL{
+			t.Error("read token failed")
+		}
 	}
-	if r.readString() != `leader` {
-		t.Error(`read "leader" failed`)
-	}
-	if r.readNextToken() != COLON_SEPERATOR {
-		t.Error(`read COLON_SEPERATOR failed`)
-	}
-	if r.readNextToken() != NULL {
-		t.Error(`read NULL failed`)
-	}
-	r.readNull()
-	if r.readNextToken() != END_OBJECT {
-		t.Error("read END_OBJECT failed")
+	if err := r.readNull(); err !=nil{
+		t.Error("read null failed")
 	}
 }

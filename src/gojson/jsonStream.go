@@ -1,8 +1,8 @@
 package gojson
 
 import (
-	"io"
-	"strings"
+	"errors"
+	"strconv"
 )
 
 const (
@@ -25,17 +25,8 @@ type JsonStream struct {
 	status    int
 }
 
-func NewJsonStreamFromReader(r io.Reader) *JsonStream {
-	return &JsonStream{
-		reader: &TokenReader{NewCharReader(r)},
-	}
-}
-func NewJsonStreamFromTokenReader(r *TokenReader) *JsonStream {
+func newJsonStreamFromTokenReader(r *TokenReader) *JsonStream {
 	return &JsonStream{reader: r}
-}
-
-func NewJsonStreamFromString(str string) *JsonStream {
-	return NewJsonStreamFromReader(strings.NewReader(str))
 }
 
 func (j *JsonStream) hasStatus(expectStatus int) bool {
@@ -50,15 +41,21 @@ func (j *JsonStream) newArray() []interface{} {
 	return make([]interface{}, 0)
 }
 
-func Parser(r *TokenReader) (interface{}, bool) {
-	j := NewJsonStreamFromTokenReader(r)
+func Parser(r *TokenReader) (interface{}, error) {
+	j := newJsonStreamFromTokenReader(r)
 	j.stack = NewStack()
 	j.status = STATUS_READ_BEGIN_OBJECT | STATUS_READ_BEGIN_ARRAY
 	for {
-		currentToken := j.reader.readNextToken()
+		currentToken,err := j.reader.readNextToken()
+		if err!=nil{
+			return nil, err
+		}
 		switch currentToken {
 		case BOOLEAN:
-			b := j.reader.readBoolean()
+			b,err := j.reader.readBoolean()
+			if err!=nil{
+				return nil, err
+			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
 				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
 					key := sv.ValueAsKey()
@@ -79,9 +76,12 @@ func Parser(r *TokenReader) (interface{}, bool) {
 				}
 				continue
 			}
-			return nil, false
+			return nil, errors.New("Read boolean failed at " + strconv.Itoa(r.position()))
 		case NUMBER:
-			number := j.reader.readNumber()
+			number,err := j.reader.readNumber()
+			if err !=nil{
+				return nil,err
+			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
 				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
 					key := sv.ValueAsKey()
@@ -102,7 +102,7 @@ func Parser(r *TokenReader) (interface{}, bool) {
 				}
 				continue
 			}
-			return nil, false
+			return nil, errors.New("Read number failed at " + strconv.Itoa(r.position()))
 		case NULL:
 			j.reader.readNull()
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
@@ -125,9 +125,9 @@ func Parser(r *TokenReader) (interface{}, bool) {
 				}
 				continue
 			}
-			return nil, false
+			return nil, errors.New("Read null failed at " + strconv.Itoa(r.position()))
 		case STRING:
-			str := j.reader.readString()
+			str,_ := j.reader.readString()
 			if j.hasStatus(STATUS_READ_OBJECT_KEY) {
 				j.stack.Push(NewJsonObjectFromKey(str))
 				j.status = STATUS_READ_COLON
@@ -152,13 +152,13 @@ func Parser(r *TokenReader) (interface{}, bool) {
 				}
 				continue
 			}
-			return nil, false
+			return nil, errors.New("Read string failed at " + strconv.Itoa(r.position()))
 		case COLON_SEPERATOR:
 			if j.status == STATUS_READ_COLON {
 				j.status = STATUS_READ_OBJECT_VALUE | STATUS_READ_BEGIN_OBJECT | STATUS_READ_BEGIN_ARRAY
 				continue
 			}
-			return nil, false
+			return nil, errors.New("Read colon seperator failed at " + strconv.Itoa(r.position()))
 		case COMA_SEPERATOR:
 			if j.hasStatus(STATUS_READ_COMMA) {
 				if j.hasStatus(STATUS_READ_END_OBJECT) {
@@ -170,7 +170,7 @@ func Parser(r *TokenReader) (interface{}, bool) {
 					continue
 				}
 			}
-			return nil, false
+			return nil, errors.New("Read coma seperator failed at " + strconv.Itoa(r.position()))
 		case START_OBJECT:
 			if j.hasStatus(STATUS_READ_BEGIN_OBJECT) {
 				j.stack.Push(NewJsonObjectFromObject(j.newMap()))
@@ -181,15 +181,17 @@ func Parser(r *TokenReader) (interface{}, bool) {
 				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
 					temp := sv.ValueAsArray()
 					j.reader.BackToken()
-					if val, ok := Parser(j.reader); ok {
+					if val, err := Parser(j.reader); err!=nil {
 						temp = append(temp, val)
 						j.stack.Push(NewJsonObjectFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 						continue
+					}else{
+						return nil, err
 					}
 				}
 			}
-			return nil, false
+			return nil, errors.New("Read { failed at " + strconv.Itoa(r.position()))
 		case START_ARRAY:
 			if j.hasStatus(STATUS_READ_BEGIN_ARRAY) {
 				j.stack.Push(NewJsonObjectFromSlice(j.newArray()))
@@ -200,26 +202,27 @@ func Parser(r *TokenReader) (interface{}, bool) {
 				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
 					temp := sv.ValueAsArray()
 					j.reader.BackToken()
-					if val, ok := Parser(j.reader); ok {
+					if val, err := Parser(j.reader); err!=nil {
 						temp = append(temp, val)
 						j.stack.Push(NewJsonObjectFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 						continue
+					}else{
+						return nil, err
 					}
 				}
 			}
-			return nil, false
+			return nil, errors.New("Read [ failed at " + strconv.Itoa(r.position()))
 		case END_OBJECT:
 			if j.hasStatus(STATUS_READ_END_OBJECT) {
 				object, _ := j.stack.PopKind(TYPE_OBJECT)
 				if j.stack.IsEmpty() {
 					j.stack.Push(object)
-					//j.status = STATUS_READ_END_DOCUMENT
 					if j.reader.IsEmpty() {
 						j.status = STATUS_READ_END_DOCUMENT
 						continue
 					} else {
-						return object.Value, true
+						return object.Value, nil
 					}
 
 				}
@@ -244,7 +247,7 @@ func Parser(r *TokenReader) (interface{}, bool) {
 					continue
 				}
 			}
-			return nil, false
+			return nil, errors.New("Read } failed at " + strconv.Itoa(r.position()))
 		case END_ARRAY:
 			if j.hasStatus(STATUS_READ_END_ARRAY) {
 				array, _ := j.stack.PopKind(TYPE_ARRAY)
@@ -254,7 +257,7 @@ func Parser(r *TokenReader) (interface{}, bool) {
 						j.status = STATUS_READ_END_DOCUMENT
 						continue
 					} else {
-						return array.Value, true
+						return array.Value, nil
 					}
 				}
 				kind := j.stack.GetTopValueType()
@@ -278,15 +281,15 @@ func Parser(r *TokenReader) (interface{}, bool) {
 					continue
 				}
 			}
-			return nil, false
+			return nil, errors.New("Read ] failed at " + strconv.Itoa(r.position()))
 		case END_DOCUMENT:
 			if j.hasStatus(STATUS_READ_END_DOCUMENT) {
 				v, _ := j.stack.Pop()
 				if j.stack.IsEmpty() {
-					return v.Value, true
+					return v.Value, nil
 				}
 			}
-			return nil, false
+			return nil, errors.New("Read document failed at " + strconv.Itoa(r.position()))
 		}
 	}
 }
