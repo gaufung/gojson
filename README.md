@@ -5,6 +5,7 @@
 *gojson* is json parser in go language.
 
 # 1 Install
+
 To start using `gojson`, please install Go and run `go get`
 
 ```sh

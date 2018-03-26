@@ -260,3 +260,52 @@ func TestTokeReader2(t *testing.T) {
 		t.Error("read null failed")
 	}
 }
+
+func TestTokenReader3(t *testing.T){
+	var json = `{"\\ba": 1.3e2}`
+	reader := newCharReader(strings.NewReader(json))
+	r := &TokenReader{reader}
+	if token, err := r.readNextToken(); err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != START_OBJECT{
+			t.Error("Read token failed")
+		}
+	}
+	if token, err := r.readNextToken(); err!=nil{
+		t.Error("read Token failed")
+	}else{
+		if token != STRING {
+			t.Error("read token failed")
+		}
+	}
+	if str, err := r.readString(); err!=nil {
+		t.Error("read string failed")
+	}else{
+		if str != "\\ba"{
+			t.Error("read string failed")
+		}
+	}
+	if token, err:= r.readNextToken(); err!=nil{
+		t.Error("read token failed")
+	}else{
+		if token != COLON_SEPERATOR {
+			t.Error("read token failed")
+		}
+	}
+	if token, err := r.readNextToken(); err!=nil{
+		t.Error("read token failed")
+	}else{
+		if token != NUMBER {
+			t.Error("read token failed")
+		}
+	}
+	if num, err := r.readNumber(); err!=nil {
+		t.Error("read number failed")
+	}else{
+		if num != float64(130) {
+			t.Errorf("%f", num)
+			t.Error("number doesn't equal")
+		}
+	}
+}

@@ -46,11 +46,6 @@ func TestJsonStream1(t *testing.T) {
 		if maps["version"].(float64) != 1.9 {
 			t.Error("version failed")
 		}
-		scores := maps["scores"].([]interface{})
-		if scores[0] != 1.5 || scores[1] != 1.7 || scores[2].(float64) != 9 {
-
-			t.Error("scores failed")
-		}
 		persons := maps["persons"].(map[string]interface{})
 		if persons["name"] != "golang" || persons["address"] != "american" ||
 			persons["isverified"] != true {

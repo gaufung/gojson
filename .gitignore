@@ -3,6 +3,7 @@
 *.iml
 bin/
 pkg/
+.vscode/
 src/debugger.go
 # Binaries for programs and plugins
 *.exe

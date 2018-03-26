@@ -12,7 +12,15 @@ const (
 	READ_NUMBER_INT_PART = iota
 	READ_NUMBER_FRA_PART
 	READ_NUMBER_EXP_PART
-	READ_NUMBER_END
+)
+
+const (
+	READ_NUMBER_PLUS = 0x0001
+	READ_NUMBER_MINUS = 0x0002
+	READ_NUMBER_DIGIT = 0X0004
+	READ_NUMBER_DOT = 0x0008
+	READ_NUMBER_E = 0x0010
+
 )
 
 type TokenReader struct {
@@ -183,149 +191,155 @@ func (t *TokenReader) readNull() error {
 // read number
 func (t *TokenReader) readNumber() (float64, error) {
 	intPart, fraPart, expPart := make([]rune, 0), make([]rune, 0), make([]rune, 0)
-	hasFraPart, hasExpPart := false, false
-	ch := t.reader.peek()
-	minusSign := ch == '-'
-	expMinusSign := false
-	if minusSign {
-		t.reader.next()
-	}
-	status := READ_NUMBER_INT_PART
-	for {
-		if t.reader.hasMore() {
-			ch = t.reader.peek()
-		} else {
-			status = READ_NUMBER_END
+	minusSign, expMinusSign := false, false
+	phase := READ_NUMBER_INT_PART
+	status:= READ_NUMBER_MINUS | READ_NUMBER_PLUS |READ_NUMBER_DIGIT
+
+	for{
+		if !t.reader.hasMore(){
+			break
 		}
-		switch status {
-		case READ_NUMBER_INT_PART:
-			if ch >= '0' && ch <= '9' {
-				intPart = append(intPart, t.reader.next())
-			} else if ch == '.' {
-				if len(intPart) == 0 {
-					return 0.0, t.errors("Read float64: unexpect char ")
-				}
-				t.reader.next()
-				hasFraPart = true
-				status = READ_NUMBER_FRA_PART
-			} else if ch == 'e' || ch == 'E' {
-				t.reader.next()
-				hasExpPart = true
-				signChar := t.reader.peek()
-				if signChar == '-' || signChar == '+' {
-					expMinusSign = signChar == '-'
+		ch := t.reader.peek()
+		token := numberToken(ch)
+		if token==0{
+			 break
+		}
+		switch token {
+		case READ_NUMBER_MINUS:
+			if phase == READ_NUMBER_INT_PART {
+				if status & READ_NUMBER_MINUS > 0 {
 					t.reader.next()
+					minusSign = true
+					status = READ_NUMBER_DIGIT | READ_NUMBER_DOT
+					continue
+
 				}
-				status = READ_NUMBER_EXP_PART
-			} else {
-				if len(intPart) == 0 {
-					return 0.0, t.errors("Read float64: unexpect char ")
-				}
-				status = READ_NUMBER_END
-			}
-			continue
-		case READ_NUMBER_FRA_PART:
-			if ch >= '0' && ch <= '9' {
-				fraPart = append(fraPart, t.reader.next())
-			} else if ch == 'e' || ch == 'E' {
-				t.reader.next()
-				hasExpPart = true
-				signChar := t.reader.peek()
-				if signChar == '-' || signChar == '+' {
-					expMinusSign = signChar == '-'
+			}else if phase == READ_NUMBER_EXP_PART {
+				if status & READ_NUMBER_MINUS > 0 {
 					t.reader.next()
+					expMinusSign = true
+					status = READ_NUMBER_DIGIT
+					continue
 				}
-				status = READ_NUMBER_EXP_PART
-			} else {
-				if len(fraPart) == 0 {
-					//panic(NewJsonParserError("Unexpected char", t.reader.pos))
-					return 0.0, t.errors("Read float64, unexpected char ")
-				}
-				status = READ_NUMBER_END
+
 			}
-			continue
-		case READ_NUMBER_EXP_PART:
-			if ch >= '0' && ch <= '9' {
-				expPart = append(expPart, t.reader.next())
-			} else {
-				if len(expPart) == 0 {
-					return 0.0, t.errors("Read float64, unexpected char ")
+			return 0.0, t.errors("Read float64: unexpect char ")
+		case READ_NUMBER_PLUS:
+			if phase == READ_NUMBER_INT_PART {
+				if status & READ_NUMBER_PLUS > 0 {
+					t.reader.next()
+					status = READ_NUMBER_DIGIT | READ_NUMBER_DOT
+					continue
 				}
-				status = READ_NUMBER_END
-			}
-			continue
-		case READ_NUMBER_END:
-			if len(intPart) == 0 {
-				return 0.0, t.errors("Read float64, unexpected char ")
-			}
-			lint := int64(0)
-			if minusSign {
-				//lint = -1 * string2long(intPart, readed)
-				if val, err:=string2long(intPart, t.position()); err==nil{
-					lint = -1 * val
-				}else{
-					return 0.0, err
-				}
-			} else {
-				//lint = string2long(intPart, readed)
-				if val, err := string2long(intPart, t.position()); err==nil{
-					lint = val
-				}else{
-					return 0.0, err
+			}else if phase == READ_NUMBER_EXP_PART {
+				if status & READ_NUMBER_PLUS > 0 {
+					t.reader.next()
+					status = READ_NUMBER_DIGIT
+					continue
 				}
 			}
-			if hasExpPart && len(expPart) == 0 {
-				return float64(lint), nil
-			}
-			if hasFraPart && len(fraPart) == 0 {
-				return 0.0, t.errors("Read float64, unexpected char ")
-			}
-			dFraPart := float64(0.0)
-			if hasFraPart {
-				if minusSign {
-					//dFraPart = -float64(1.0) * string2Fraction(fraPart, t.reader.pos)
-					if val, err := string2Fraction(fraPart, t.position()); err == nil{
-						dFraPart = -float64(1.0) * val
-					}else{
-						return 0.0, err
-					}
-				} else {
-					//dFraPart = string2Fraction(fraPart, t.reader.pos)
-					if val, err := string2Fraction(fraPart, t.position()); err==nil{
-						dFraPart = val
-					}else{
-						return 0.0, err
-					}
+			return 0.0, t.errors("Read float64: unexpect char ")
+		case READ_NUMBER_DOT:
+			if phase==READ_NUMBER_INT_PART {
+				if status & READ_NUMBER_DOT > 0 {
+					t.reader.next()
+					phase = READ_NUMBER_FRA_PART
+					status = READ_NUMBER_DIGIT | READ_NUMBER_E
+					continue
 				}
 			}
-			number := float64(0.0)
-			if hasExpPart {
-				index := int64(0.0)
-				if expMinusSign {
-					//index = -1.0 * string2long(expPart, readed)
-					if val, err := string2long(expPart, t.position()); err==nil{
-						index = -1.0 * val
-					}else{
-						return 0.0, err
-					}
-				} else {
-					//index = string2long(expPart, readed)
-					if val, err := string2long(expPart, t.position()); err!=nil{
-						index = val
-					}else{
-						return 0.0, err
-					}
+			return 0.0, t.errors("Read float64: unexpect char ")
+		case READ_NUMBER_DIGIT:
+			if phase == READ_NUMBER_INT_PART {
+				if status & READ_NUMBER_DIGIT > 0 {
+					char := t.reader.next()
+					intPart = append(intPart, char)
+					status = READ_NUMBER_DIGIT | READ_NUMBER_DOT | READ_NUMBER_E
+					continue
 				}
-				number = (float64(lint) + dFraPart) * math.Pow(10.0, float64(index))
-			} else {
-				number = float64(lint) + dFraPart
 			}
-			if number > maxSafeFloat64 {
-				return 0.0, t.errors("Read float64, unexpected char ")
+			if phase == READ_NUMBER_FRA_PART {
+				if status & READ_NUMBER_DIGIT > 0 {
+					char := t.reader.next()
+					fraPart = append(fraPart, char)
+					status = READ_NUMBER_DIGIT | READ_NUMBER_E
+					continue
+				}
 			}
-			return number, nil
+			if phase == READ_NUMBER_EXP_PART {
+				if status & READ_NUMBER_DIGIT > 0 {
+					char := t.reader.next()
+					expPart = append(expPart, char)
+					status = READ_NUMBER_DIGIT
+					continue
+				}
+			}
+			return 0.0, t.errors("Read float64: unexpect char ")
+		case READ_NUMBER_E:
+			if phase == READ_NUMBER_INT_PART ||  phase == READ_NUMBER_FRA_PART {
+				if status & READ_NUMBER_E > 0 {
+					t.reader.next()
+					phase = READ_NUMBER_EXP_PART
+					status = READ_NUMBER_PLUS | READ_NUMBER_MINUS | READ_NUMBER_DIGIT
+					continue
+				}
+			}
+			return 0.0, t.errors("Read float64: unexpect char ")
 		}
 	}
+	fraction := fracPartConvert(fraPart)
+	firstPart := 0.0
+	if fraction == 0.0 {
+		firstPart = intPartConvert(intPart)
+	}else{
+		firstPart = intPartConvert(intPart) + fraction
+	}
+	secondPart := intPartConvert(expPart)
+	if minusSign{
+		firstPart = -1.0 * firstPart
+	}
+	if expMinusSign {
+		secondPart = -1.0 * secondPart
+	}
+	if secondPart == 0.0 {
+		return firstPart, nil
+	}else{
+		return firstPart * math.Pow(10.0, secondPart), nil
+	}
+}
+
+func intPartConvert(digits []rune) float64{
+	result := 0.0
+	for _,digit := range digits{
+		result = result * 10.0 + float64(digit - '0')
+	}
+	return result;
+}
+func fracPartConvert(digits []rune) float64 {
+	result := 0.0
+	factor := 0.1
+	for _, digit := range digits {
+		result = result + factor * float64(digit - '0')
+		factor = factor * 0.1
+	}
+	return result
+}
+
+func numberToken(ch rune) int {
+	if ch>='0' && ch <= '9' {
+		return READ_NUMBER_DIGIT
+	}else if ch =='.'{
+		return READ_NUMBER_DOT
+	}else if ch == 'e' || ch == 'E' {
+		return READ_NUMBER_E
+	}else if ch == '+' {
+		return READ_NUMBER_PLUS
+	}else if ch == '-' {
+		return READ_NUMBER_MINUS
+	}else{
+		return 0
+	}
+
 }
 
 //back token
@@ -340,38 +354,4 @@ func (t *TokenReader) IsEmpty() bool {
 	} else {
 		return false
 	}
-}
-
-var maxSafeInt64 = int64(9007199254740991)
-
-func string2long(str []rune, readed int) (int64, error) {
-	if len(str) > 16 {
-		return 0.0, errors.New("Read long: too many digits at "+strconv.Itoa(readed))
-	}
-	result := int64(0)
-	for _, digit := range str {
-		result = result*10 + int64(digit-'0')
-		if result > maxSafeInt64 {
-			return 0.0, errors.New("Read long: too big at "+ strconv.Itoa(readed))
-		}
-	}
-	return result, nil
-}
-
-var maxSafeFloat64 = 1.7976931348623157e+308
-
-func string2Fraction(str []rune, readed int) (float64, error) {
-	if len(str) > 16 {
-		return 0.0, errors.New("Read fraction: too many digits at " +strconv.Itoa(readed))
-	}
-	result := float64(0.0)
-	for idx, digit := range str {
-		n := int(digit - '0')
-		if n == 0 {
-			result = result + 0
-		} else {
-			result = result + float64(n)/math.Pow(10, float64(idx+1))
-		}
-	}
-	return result, nil
 }
