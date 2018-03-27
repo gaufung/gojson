@@ -1,11 +1,11 @@
 package gojson
 
 import (
-	"math"
-	"strings"
-	"io"
 	"errors"
+	"io"
+	"math"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -15,12 +15,12 @@ const (
 )
 
 const (
-	READ_NUMBER_PLUS = 0x0001
+	READ_NUMBER_PLUS  = 0x0001
 	READ_NUMBER_MINUS = 0x0002
 	READ_NUMBER_DIGIT = 0X0004
-	READ_NUMBER_DOT = 0x0008
-	READ_NUMBER_E = 0x0010
-
+	READ_NUMBER_DOT   = 0x0008
+	READ_NUMBER_E     = 0x0010
+	READ_NUMBER_END = 0x0100
 )
 
 type TokenReader struct {
@@ -31,16 +31,16 @@ func NewTokenReaderFromString(s string) *TokenReader {
 	return newTokenReader(strings.NewReader(s))
 }
 
-func newTokenReader(r io.Reader) *TokenReader{
-	return &TokenReader{newCharReader(r)} 
+func newTokenReader(r io.Reader) *TokenReader {
+	return &TokenReader{newCharReader(r)}
 }
 
 func (t *TokenReader) position() int {
 	return t.reader.pos
 }
 
-func (t *TokenReader) errors(info string) error{
-	return errors.New(info+" at " + strconv.Itoa(t.position()))
+func (t *TokenReader) errors(info string) error {
+	return errors.New(info + " at " + strconv.Itoa(t.position()))
 }
 
 // white space to ignore
@@ -49,7 +49,7 @@ func (t *TokenReader) isWhiteSpace(ch rune) bool {
 }
 
 // read next token
-func (t *TokenReader) readNextToken() (Token,error) {
+func (t *TokenReader) readNextToken() (Token, error) {
 	ch := '?'
 	for {
 		if !t.reader.hasMore() {
@@ -99,7 +99,7 @@ func (t *TokenReader) readNextToken() (Token,error) {
 }
 
 // read string
-func (t *TokenReader) readString() (string,error) {
+func (t *TokenReader) readString() (string, error) {
 	result := make([]rune, 0)
 	ch := t.reader.next()
 	if ch != '"' {
@@ -137,7 +137,6 @@ func (t *TokenReader) readString() (string,error) {
 					} else if uch >= 'A' && uch <= 'F' {
 						u = (u << 4) + (int(uch) - int('A')) + 10
 					} else {
-						//panic(NewJsonParserError("Unexpected char", t.reader.pos))
 						return "", t.errors("Read string: unexpected char ")
 					}
 				}
@@ -157,7 +156,7 @@ func (t *TokenReader) readString() (string,error) {
 }
 
 // read boolean
-func (t *TokenReader) readBoolean() (bool,error) {
+func (t *TokenReader) readBoolean() (bool, error) {
 	ch := t.reader.next()
 	expect := ""
 	if ch == 't' {
@@ -165,13 +164,12 @@ func (t *TokenReader) readBoolean() (bool,error) {
 	} else if ch == 'f' {
 		expect = "alse"
 	} else {
-		//panic(NewJsonParserError("Unexpected char", t.reader.pos))
-		return false, t.errors("Read boolean: unexpected char ")
+		return false, t.errors("Read boolean: unexpected char")
 	}
 	for _, c := range []rune(expect) {
 		theChar := t.reader.next()
 		if theChar != c {
-			return false, t.errors("Read boolean: unexpected char ")
+			return false, t.errors("Read boolean: unexpected char")
 		}
 	}
 	return ch == 't', nil
@@ -193,29 +191,29 @@ func (t *TokenReader) readNumber() (float64, error) {
 	intPart, fraPart, expPart := make([]rune, 0), make([]rune, 0), make([]rune, 0)
 	minusSign, expMinusSign := false, false
 	phase := READ_NUMBER_INT_PART
-	status:= READ_NUMBER_MINUS | READ_NUMBER_PLUS |READ_NUMBER_DIGIT
+	status := READ_NUMBER_MINUS | READ_NUMBER_PLUS | READ_NUMBER_DIGIT
 
-	for{
-		if !t.reader.hasMore(){
+	for {
+		if !t.reader.hasMore() {
 			break
 		}
 		ch := t.reader.peek()
 		token := numberToken(ch)
-		if token==0{
-			 break
+		if token == READ_NUMBER_END {
+			break
 		}
 		switch token {
 		case READ_NUMBER_MINUS:
 			if phase == READ_NUMBER_INT_PART {
-				if status & READ_NUMBER_MINUS > 0 {
+				if status&READ_NUMBER_MINUS > 0 {
 					t.reader.next()
 					minusSign = true
 					status = READ_NUMBER_DIGIT | READ_NUMBER_DOT
 					continue
 
 				}
-			}else if phase == READ_NUMBER_EXP_PART {
-				if status & READ_NUMBER_MINUS > 0 {
+			} else if phase == READ_NUMBER_EXP_PART {
+				if status&READ_NUMBER_MINUS > 0 {
 					t.reader.next()
 					expMinusSign = true
 					status = READ_NUMBER_DIGIT
@@ -223,35 +221,35 @@ func (t *TokenReader) readNumber() (float64, error) {
 				}
 
 			}
-			return 0.0, t.errors("Read float64: unexpect char ")
+			return 0.0, t.errors("Read float64: unexpect char")
 		case READ_NUMBER_PLUS:
 			if phase == READ_NUMBER_INT_PART {
-				if status & READ_NUMBER_PLUS > 0 {
+				if status&READ_NUMBER_PLUS > 0 {
 					t.reader.next()
 					status = READ_NUMBER_DIGIT | READ_NUMBER_DOT
 					continue
 				}
-			}else if phase == READ_NUMBER_EXP_PART {
-				if status & READ_NUMBER_PLUS > 0 {
+			} else if phase == READ_NUMBER_EXP_PART {
+				if status&READ_NUMBER_PLUS > 0 {
 					t.reader.next()
 					status = READ_NUMBER_DIGIT
 					continue
 				}
 			}
-			return 0.0, t.errors("Read float64: unexpect char ")
+			return 0.0, t.errors("Read float64: unexpect char")
 		case READ_NUMBER_DOT:
-			if phase==READ_NUMBER_INT_PART {
-				if status & READ_NUMBER_DOT > 0 {
+			if phase == READ_NUMBER_INT_PART {
+				if status&READ_NUMBER_DOT > 0 {
 					t.reader.next()
 					phase = READ_NUMBER_FRA_PART
 					status = READ_NUMBER_DIGIT | READ_NUMBER_E
 					continue
 				}
 			}
-			return 0.0, t.errors("Read float64: unexpect char ")
+			return 0.0, t.errors("Read float64: unexpect char")
 		case READ_NUMBER_DIGIT:
 			if phase == READ_NUMBER_INT_PART {
-				if status & READ_NUMBER_DIGIT > 0 {
+				if status&READ_NUMBER_DIGIT > 0 {
 					char := t.reader.next()
 					intPart = append(intPart, char)
 					status = READ_NUMBER_DIGIT | READ_NUMBER_DOT | READ_NUMBER_E
@@ -259,7 +257,7 @@ func (t *TokenReader) readNumber() (float64, error) {
 				}
 			}
 			if phase == READ_NUMBER_FRA_PART {
-				if status & READ_NUMBER_DIGIT > 0 {
+				if status&READ_NUMBER_DIGIT > 0 {
 					char := t.reader.next()
 					fraPart = append(fraPart, char)
 					status = READ_NUMBER_DIGIT | READ_NUMBER_E
@@ -267,35 +265,35 @@ func (t *TokenReader) readNumber() (float64, error) {
 				}
 			}
 			if phase == READ_NUMBER_EXP_PART {
-				if status & READ_NUMBER_DIGIT > 0 {
+				if status&READ_NUMBER_DIGIT > 0 {
 					char := t.reader.next()
 					expPart = append(expPart, char)
 					status = READ_NUMBER_DIGIT
 					continue
 				}
 			}
-			return 0.0, t.errors("Read float64: unexpect char ")
+			return 0.0, t.errors("Read float64: unexpect char")
 		case READ_NUMBER_E:
-			if phase == READ_NUMBER_INT_PART ||  phase == READ_NUMBER_FRA_PART {
-				if status & READ_NUMBER_E > 0 {
+			if phase == READ_NUMBER_INT_PART || phase == READ_NUMBER_FRA_PART {
+				if status&READ_NUMBER_E > 0 {
 					t.reader.next()
 					phase = READ_NUMBER_EXP_PART
 					status = READ_NUMBER_PLUS | READ_NUMBER_MINUS | READ_NUMBER_DIGIT
 					continue
 				}
 			}
-			return 0.0, t.errors("Read float64: unexpect char ")
+			return 0.0, t.errors("Read float64: unexpect char")
 		}
 	}
 	fraction := fracPartConvert(fraPart)
 	firstPart := 0.0
 	if fraction == 0.0 {
 		firstPart = intPartConvert(intPart)
-	}else{
+	} else {
 		firstPart = intPartConvert(intPart) + fraction
 	}
 	secondPart := intPartConvert(expPart)
-	if minusSign{
+	if minusSign {
 		firstPart = -1.0 * firstPart
 	}
 	if expMinusSign {
@@ -303,43 +301,42 @@ func (t *TokenReader) readNumber() (float64, error) {
 	}
 	if secondPart == 0.0 {
 		return firstPart, nil
-	}else{
+	} else {
 		return firstPart * math.Pow(10.0, secondPart), nil
 	}
 }
 
-func intPartConvert(digits []rune) float64{
+func intPartConvert(digits []rune) float64 {
 	result := 0.0
-	for _,digit := range digits{
-		result = result * 10.0 + float64(digit - '0')
+	for _, digit := range digits {
+		result = result*10.0 + float64(digit-'0')
 	}
-	return result;
+	return result
 }
 func fracPartConvert(digits []rune) float64 {
 	result := 0.0
 	factor := 0.1
 	for _, digit := range digits {
-		result = result + factor * float64(digit - '0')
+		result = result + factor*float64(digit-'0')
 		factor = factor * 0.1
 	}
 	return result
 }
 
 func numberToken(ch rune) int {
-	if ch>='0' && ch <= '9' {
+	if ch >= '0' && ch <= '9' {
 		return READ_NUMBER_DIGIT
-	}else if ch =='.'{
+	} else if ch == '.' {
 		return READ_NUMBER_DOT
-	}else if ch == 'e' || ch == 'E' {
+	} else if ch == 'e' || ch == 'E' {
 		return READ_NUMBER_E
-	}else if ch == '+' {
+	} else if ch == '+' {
 		return READ_NUMBER_PLUS
-	}else if ch == '-' {
+	} else if ch == '-' {
 		return READ_NUMBER_MINUS
-	}else{
-		return 0
+	} else {
+		return READ_NUMBER_END
 	}
-
 }
 
 //back token

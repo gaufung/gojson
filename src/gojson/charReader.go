@@ -1,12 +1,12 @@
 package gojson
+
 //Copyright 2018 by gau fung. All rights reserved.
 //Use of source code is governed by MIT License
 
-
 import (
 	"io"
-	"unicode/utf8"
 	"io/ioutil"
+	"unicode/utf8"
 )
 
 //CharReader struct
@@ -20,19 +20,19 @@ type CharReader struct {
 
 //create CharReader
 func newCharReader(r io.Reader) *CharReader {
-	reader := &CharReader{reader:r}
+	reader := &CharReader{reader: r}
 	reader.fillBuffer()
 	return reader
 }
 
 // fill buffer
 func (r *CharReader) fillBuffer() {
-	if buffer, err:=ioutil.ReadAll(r.reader); err==nil{
-		r.buffer=buffer
+	if buffer, err := ioutil.ReadAll(r.reader); err == nil {
+		r.buffer = buffer
 		r.pos = 0
 		r.size = len(r.buffer)
-	}else{
-		r.buffer = make([]byte,0)
+	} else {
+		r.buffer = make([]byte, 0)
 	}
 }
 
@@ -52,14 +52,15 @@ func (r *CharReader) next() rune {
 		}
 	}
 }
+
 //backward previous char, using utf-8 encoding
 func (r *CharReader) backward() {
 	index := 1
 	for {
-		if utf8.Valid(r.buffer[r.pos-index:r.pos]){
-			r.pos = r.pos -index
+		if utf8.Valid(r.buffer[r.pos-index : r.pos]) {
+			r.pos = r.pos - index
 			return
-		}else{
+		} else {
 			index++
 		}
 	}
@@ -86,4 +87,3 @@ func (r *CharReader) peek() rune {
 		}
 	}
 }
-

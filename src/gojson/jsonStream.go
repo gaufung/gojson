@@ -46,14 +46,14 @@ func Parser(r *TokenReader) (interface{}, error) {
 	j.stack = NewStack()
 	j.status = STATUS_READ_BEGIN_OBJECT | STATUS_READ_BEGIN_ARRAY
 	for {
-		currentToken,err := j.reader.readNextToken()
-		if err!=nil{
+		currentToken, err := j.reader.readNextToken()
+		if err != nil {
 			return nil, err
 		}
 		switch currentToken {
 		case BOOLEAN:
-			b,err := j.reader.readBoolean()
-			if err!=nil{
+			b, err := j.reader.readBoolean()
+			if err != nil {
 				return nil, err
 			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
@@ -78,9 +78,9 @@ func Parser(r *TokenReader) (interface{}, error) {
 			}
 			return nil, errors.New("Read boolean failed at " + strconv.Itoa(r.position()))
 		case NUMBER:
-			number,err := j.reader.readNumber()
-			if err !=nil{
-				return nil,err
+			number, err := j.reader.readNumber()
+			if err != nil {
+				return nil, err
 			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
 				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
@@ -127,7 +127,7 @@ func Parser(r *TokenReader) (interface{}, error) {
 			}
 			return nil, errors.New("Read null failed at " + strconv.Itoa(r.position()))
 		case STRING:
-			str,_ := j.reader.readString()
+			str, _ := j.reader.readString()
 			if j.hasStatus(STATUS_READ_OBJECT_KEY) {
 				j.stack.Push(NewJsonObjectFromKey(str))
 				j.status = STATUS_READ_COLON
@@ -181,12 +181,12 @@ func Parser(r *TokenReader) (interface{}, error) {
 				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
 					temp := sv.ValueAsArray()
 					j.reader.BackToken()
-					if val, err := Parser(j.reader); err!=nil {
+					if val, err := Parser(j.reader); err != nil {
 						temp = append(temp, val)
 						j.stack.Push(NewJsonObjectFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 						continue
-					}else{
+					} else {
 						return nil, err
 					}
 				}
@@ -202,12 +202,12 @@ func Parser(r *TokenReader) (interface{}, error) {
 				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
 					temp := sv.ValueAsArray()
 					j.reader.BackToken()
-					if val, err := Parser(j.reader); err!=nil {
+					if val, err := Parser(j.reader); err != nil {
 						temp = append(temp, val)
 						j.stack.Push(NewJsonObjectFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 						continue
-					}else{
+					} else {
 						return nil, err
 					}
 				}
