@@ -45,7 +45,7 @@ var json = `{	"debugger" : false,
 	        }`
 func main(){
     tokenReader := gojson.NewTokenReaderFromString(json)
-    if obj, err := gojson.Parser(tokenReader); err!=nil {
+    if obj, err := gojson.Parse(tokenReader); err!=nil {
 		maps := obj.(map[string]interface{})
         fmt.Println(maps["debugger"]) // false
         fmt.Println(maps["companies"]) // [google 腾讯]
@@ -60,3 +60,10 @@ func main(){
 }
 ```
 
+
+# 3 RoadMap
+
+- [x] Fix nesting json parsing.
+- [ ] Add serialize features.
+- [ ] Appeal to stack rather than recursion to achive high performance.
+- [ ] Benchmark testing

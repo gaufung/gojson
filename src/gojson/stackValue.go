@@ -4,42 +4,37 @@ const (
 	TYPE_OBJECT = iota
 	TYPE_OBJECT_KEY
 	TYPE_ARRAY
-	TYPE_SINGLE
 )
 
-type StackValue struct {
-	Kind  int
-	Value interface{}
+type stackValue struct {
+	kind  int
+	value interface{}
 }
 
-func NewJsonObjectFromObject(obj interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_OBJECT, Value: obj}
+func newStackValueFromObject(obj interface{}) *stackValue {
+	return &stackValue{kind: TYPE_OBJECT, value: obj}
 }
 
-func NewJsonObjectFromMap(m map[string]interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_OBJECT, Value: m}
+func newStackValueFromMap(m map[string]interface{}) *stackValue {
+	return &stackValue{kind: TYPE_OBJECT, value: m}
 }
 
-func NewJsonObjectFromKey(key string) *StackValue {
-	return &StackValue{Kind: TYPE_OBJECT_KEY, Value: key}
+func newStackValueFromKey(key string) *stackValue {
+	return &stackValue{kind: TYPE_OBJECT_KEY, value: key}
 }
 
-func NewJsonObjectFromSlice(arr []interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_ARRAY, Value: arr}
+func newStackValueFromSlice(arr []interface{}) *stackValue {
+	return &stackValue{kind: TYPE_ARRAY, value: arr}
 }
 
-func NewJsonObjectFromSingle(obj interface{}) *StackValue {
-	return &StackValue{Kind: TYPE_SINGLE, Value: obj}
+func (s *stackValue) valueAsKey() string {
+	return s.value.(string)
 }
 
-func (s *StackValue) ValueAsKey() string {
-	return s.Value.(string)
+func (s *stackValue) valueAsObject() map[string]interface{} {
+	return s.value.(map[string]interface{})
 }
 
-func (s *StackValue) ValueAsObject() map[string]interface{} {
-	return s.Value.(map[string]interface{})
-}
-
-func (s *StackValue) ValueAsArray() []interface{} {
-	return s.Value.([]interface{})
+func (s *stackValue) valueAsArray() []interface{} {
+	return s.value.([]interface{})
 }

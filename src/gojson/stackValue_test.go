@@ -12,33 +12,25 @@ func TestStackValue(t *testing.T) {
 	if TYPE_ARRAY != 2 {
 		t.Error("TYPE_ARRAY failed")
 	}
-	if TYPE_SINGLE != 3 {
-		t.Error("TYPE_SINGLE failed")
-	}
 
-	s1 := NewJsonObjectFromObject(1)
-	if s1.Value.(int) != 1 || s1.Kind != TYPE_OBJECT {
+	s1 := newStackValueFromObject(1)
+	if s1.value.(int) != 1 || s1.kind != TYPE_OBJECT {
 		t.Error("NewJsonObjectFromObject() failed")
 	}
-	s2 := NewJsonObjectFromKey("key")
-	if s2.ValueAsKey() != "key" || s2.Value.(string) != "key" || s2.Kind != TYPE_OBJECT_KEY {
+	s2 := newStackValueFromKey("key")
+	if s2.valueAsKey() != "key" || s2.value.(string) != "key" || s2.kind != TYPE_OBJECT_KEY {
 		t.Error("NewJsonObjectFromKey() failed")
 	}
 	arr := []interface{}{1, 2, 3, 4}
-	s3 := NewJsonObjectFromSlice(arr)
-	if s3.Kind != TYPE_ARRAY {
+	s3 := newStackValueFromSlice(arr)
+	if s3.kind != TYPE_ARRAY {
 		t.Error("NewJsonObjectFromSlice() failed")
 	}
-	s4 := NewJsonObjectFromSingle(123)
-	if s4.Kind != TYPE_SINGLE || s4.Value.(int) != 123 {
-		t.Error("NewJsonObjectFromSingle() failed")
-	}
-
 	m := make(map[string]interface{})
 	m["index"] = 1
 	m["name"] = "golang"
-	s5 := NewJsonObjectFromMap(m)
-	if s5.Kind != TYPE_OBJECT {
+	s5 := newStackValueFromMap(m)
+	if s5.kind != TYPE_OBJECT {
 		t.Error("NewJsonObjectFromMap() failed")
 	}
 }
