@@ -1,21 +1,21 @@
 package gojson
 
-type Stack struct {
+type stack struct {
 	Size  int
 	pos   int
-	array []*StackValue
+	array []*stackValue
 }
 
-func NewStack() *Stack {
+func newStack() *stack {
 	size := 100
-	return &Stack{Size: size, pos: 0, array: make([]*StackValue, size)}
+	return &stack{Size: size, pos: 0, array: make([]*stackValue, size)}
 }
 
-func (s *Stack) IsEmpty() bool {
+func (s *stack) isEmpty() bool {
 	return s.pos == 0
 }
 
-func (s *Stack) Push(obj *StackValue) bool {
+func (s *stack) push(obj *stackValue) bool {
 	if s.pos == s.Size {
 		return false
 	}
@@ -24,38 +24,38 @@ func (s *Stack) Push(obj *StackValue) bool {
 	return true
 }
 
-func (s *Stack) Pop() (*StackValue, bool) {
-	if s.IsEmpty() {
+func (s *stack) pop() (*stackValue, bool) {
+	if s.isEmpty() {
 		return nil, false
 	}
 	s.pos--
 	return s.array[s.pos], true
 }
 
-func (s *Stack) PopKind(kind int) (*StackValue, bool) {
-	if s.IsEmpty() {
+func (s *stack) popKind(kind int) (*stackValue, bool) {
+	if s.isEmpty() {
 		return nil, false
 	}
 	s.pos--
 	obj := s.array[s.pos]
-	if obj.Kind == kind {
+	if obj.kind == kind {
 		return obj, true
 	} else {
 		return nil, false
 	}
 }
 
-func (s *Stack) GetTopValueType() int {
+func (s *stack) getTopValueType() int {
 	obj := s.array[s.pos-1]
-	return obj.Kind
+	return obj.kind
 }
 
-func (s *Stack) Peek(kind int) (*StackValue, bool) {
-	if s.IsEmpty() {
+func (s *stack) peek(kind int) (*stackValue, bool) {
+	if s.isEmpty() {
 		return nil, false
 	}
 	obj := s.array[s.pos-1]
-	if obj.Kind == kind {
+	if obj.kind == kind {
 		return obj, true
 	}
 	return nil, false

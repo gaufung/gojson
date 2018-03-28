@@ -11,7 +11,7 @@ import (
 
 //CharReader struct
 //Including buffer, reader, pos and size
-type CharReader struct {
+type charReader struct {
 	buffer []byte
 	reader io.Reader
 	pos    int
@@ -19,14 +19,14 @@ type CharReader struct {
 }
 
 //create CharReader
-func newCharReader(r io.Reader) *CharReader {
-	reader := &CharReader{reader: r}
+func newCharReader(r io.Reader) *charReader {
+	reader := &charReader{reader: r}
 	reader.fillBuffer()
 	return reader
 }
 
 // fill buffer
-func (r *CharReader) fillBuffer() {
+func (r *charReader) fillBuffer() {
 	if buffer, err := ioutil.ReadAll(r.reader); err == nil {
 		r.buffer = buffer
 		r.pos = 0
@@ -37,12 +37,12 @@ func (r *CharReader) fillBuffer() {
 }
 
 //determine whether has more byte to read, if yes return true, or else false
-func (r *CharReader) hasMore() bool {
+func (r *charReader) hasMore() bool {
 	return r.pos < r.size
 }
 
 // next char, using utf-8 encoding
-func (r *CharReader) next() rune {
+func (r *charReader) next() rune {
 	bytes := make([]byte, 0)
 	for {
 		bytes = append(bytes, r.nextByte())
@@ -54,7 +54,7 @@ func (r *CharReader) next() rune {
 }
 
 //backward previous char, using utf-8 encoding
-func (r *CharReader) backward() {
+func (r *charReader) backward() {
 	index := 1
 	for {
 		if utf8.Valid(r.buffer[r.pos-index : r.pos]) {
@@ -67,14 +67,14 @@ func (r *CharReader) backward() {
 }
 
 //next byte
-func (r *CharReader) nextByte() byte {
+func (r *charReader) nextByte() byte {
 	ch := r.buffer[r.pos]
 	r.pos++
 	return ch
 }
 
 //peek next char, using utf-8 encoding
-func (r *CharReader) peek() rune {
+func (r *charReader) peek() rune {
 	idx := r.pos
 	bytes := make([]byte, 0)
 	for {

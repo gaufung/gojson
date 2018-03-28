@@ -24,14 +24,14 @@ const (
 )
 
 type TokenReader struct {
-	reader *CharReader
+	reader *charReader
 }
 
 func NewTokenReaderFromString(s string) *TokenReader {
-	return newTokenReader(strings.NewReader(s))
+	return NewTokenReader(strings.NewReader(s))
 }
 
-func newTokenReader(r io.Reader) *TokenReader {
+func NewTokenReader(r io.Reader) *TokenReader {
 	return &TokenReader{newCharReader(r)}
 }
 
@@ -340,12 +340,12 @@ func numberToken(ch rune) int {
 }
 
 //back token
-func (t *TokenReader) BackToken() {
+func (t *TokenReader) backToken() {
 	t.reader.backward()
 }
 
 //determine whether is empty or not
-func (t *TokenReader) IsEmpty() bool {
+func (t *TokenReader) isEmpty() bool {
 	if !t.reader.hasMore() {
 		return true
 	} else {

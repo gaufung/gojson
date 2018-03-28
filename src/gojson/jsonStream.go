@@ -20,7 +20,7 @@ const (
 
 type JsonStream struct {
 	reader    *TokenReader
-	stack     *Stack
+	stack     *stack
 	lastToken Token
 	status    int
 }
@@ -30,7 +30,7 @@ func newJsonStreamFromTokenReader(r *TokenReader) *JsonStream {
 }
 
 func (j *JsonStream) hasStatus(expectStatus int) bool {
-	return (j.status & expectStatus) != 0
+	return (j.status & expectStatus) > 0
 }
 
 func (j *JsonStream) newMap() map[string]interface{} {
@@ -41,9 +41,9 @@ func (j *JsonStream) newArray() []interface{} {
 	return make([]interface{}, 0)
 }
 
-func Parser(r *TokenReader) (interface{}, error) {
+func Parse(r *TokenReader) (interface{}, error) {
 	j := newJsonStreamFromTokenReader(r)
-	j.stack = NewStack()
+	j.stack = newStack()
 	j.status = STATUS_READ_BEGIN_OBJECT | STATUS_READ_BEGIN_ARRAY
 	for {
 		currentToken, err := j.reader.readNextToken()
@@ -57,21 +57,20 @@ func Parser(r *TokenReader) (interface{}, error) {
 				return nil, err
 			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
-					key := sv.ValueAsKey()
-					if tsv, o := j.stack.Peek(TYPE_OBJECT); o {
-						tsv.ValueAsObject()[key] = b
+				if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+					key := sv.valueAsKey()
+					if tsv, o := j.stack.peek(TYPE_OBJECT); o {
+						tsv.valueAsObject()[key] = b
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_OBJECT
 					}
 				}
 				continue
 			}
 			if j.hasStatus(STATUS_READ_ARRAY_VALUE) {
-				if sv, ok := j.stack.Peek(TYPE_ARRAY); ok {
-					temp := sv.ValueAsArray()
+				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+					temp := sv.valueAsArray()
 					temp = append(temp, b)
-					j.stack.Pop()
-					j.stack.Push(NewJsonObjectFromSlice(temp))
+					j.stack.push(newStackValueFromSlice(temp))
 					j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 				}
 				continue
@@ -83,21 +82,20 @@ func Parser(r *TokenReader) (interface{}, error) {
 				return nil, err
 			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
-					key := sv.ValueAsKey()
-					if tsv, o := j.stack.Peek(TYPE_OBJECT); o {
-						tsv.ValueAsObject()[key] = number
+				if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+					key := sv.valueAsKey()
+					if tsv, o := j.stack.peek(TYPE_OBJECT); o {
+						tsv.valueAsObject()[key] = number
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_OBJECT
 					}
 				}
 				continue
 			}
 			if j.hasStatus(STATUS_READ_ARRAY_VALUE) {
-				if sv, ok := j.stack.Peek(TYPE_ARRAY); ok {
-					temp := sv.ValueAsArray()
+				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+					temp := sv.valueAsArray()
 					temp = append(temp, number)
-					j.stack.Pop()
-					j.stack.Push(NewJsonObjectFromSlice(temp))
+					j.stack.push(newStackValueFromSlice(temp))
 					j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 				}
 				continue
@@ -106,21 +104,20 @@ func Parser(r *TokenReader) (interface{}, error) {
 		case NULL:
 			j.reader.readNull()
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
-					key := sv.ValueAsKey()
-					if tsv, o := j.stack.Peek(TYPE_OBJECT); o {
-						tsv.ValueAsObject()[key] = nil
+				if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+					key := sv.valueAsKey()
+					if tsv, o := j.stack.peek(TYPE_OBJECT); o {
+						tsv.valueAsObject()[key] = nil
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_OBJECT
 					}
 				}
 				continue
 			}
 			if j.hasStatus(STATUS_READ_ARRAY_VALUE) {
-				if sv, ok := j.stack.Peek(TYPE_ARRAY); ok {
-					temp := sv.ValueAsArray()
+				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+					temp := sv.valueAsArray()
 					temp = append(temp, nil)
-					j.stack.Pop()
-					j.stack.Push(NewJsonObjectFromSlice(temp))
+					j.stack.push(newStackValueFromSlice(temp))
 					j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 				}
 				continue
@@ -129,25 +126,25 @@ func Parser(r *TokenReader) (interface{}, error) {
 		case STRING:
 			str, _ := j.reader.readString()
 			if j.hasStatus(STATUS_READ_OBJECT_KEY) {
-				j.stack.Push(NewJsonObjectFromKey(str))
+				j.stack.push(newStackValueFromKey(str))
 				j.status = STATUS_READ_COLON
 				continue
 			}
 			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
-					key := sv.ValueAsKey()
-					if tsv, o := j.stack.Peek(TYPE_OBJECT); o {
-						tsv.ValueAsObject()[key] = str
+				if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+					key := sv.valueAsKey()
+					if tsv, o := j.stack.peek(TYPE_OBJECT); o {
+						tsv.valueAsObject()[key] = str
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_OBJECT
 					}
 				}
 				continue
 			}
 			if j.hasStatus(STATUS_READ_ARRAY_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
-					temp := sv.ValueAsArray()
+				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+					temp := sv.valueAsArray()
 					temp = append(temp, str)
-					j.stack.Push(NewJsonObjectFromSlice(temp))
+					j.stack.push(newStackValueFromSlice(temp))
 					j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 				}
 				continue
@@ -155,7 +152,7 @@ func Parser(r *TokenReader) (interface{}, error) {
 			return nil, errors.New("Read string failed at " + strconv.Itoa(r.position()))
 		case COLON_SEPERATOR:
 			if j.status == STATUS_READ_COLON {
-				j.status = STATUS_READ_OBJECT_VALUE | STATUS_READ_BEGIN_OBJECT | STATUS_READ_BEGIN_ARRAY
+				j.status = STATUS_READ_OBJECT_VALUE | STATUS_READ_BEGIN_ARRAY
 				continue
 			}
 			return nil, errors.New("Read colon seperator failed at " + strconv.Itoa(r.position()))
@@ -173,38 +170,49 @@ func Parser(r *TokenReader) (interface{}, error) {
 			return nil, errors.New("Read coma seperator failed at " + strconv.Itoa(r.position()))
 		case START_OBJECT:
 			if j.hasStatus(STATUS_READ_BEGIN_OBJECT) {
-				j.stack.Push(NewJsonObjectFromObject(j.newMap()))
+				j.stack.push(newStackValueFromObject(j.newMap()))
 				j.status = STATUS_READ_OBJECT_KEY | STATUS_READ_END_OBJECT
 				continue
 			}
+			if j.hasStatus(STATUS_READ_OBJECT_VALUE) {
+				if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+					key := sv.valueAsKey()
+					j.reader.backToken()
+					if val, err := Parse(j.reader); err == nil {
+						if tsv, o := j.stack.peek(TYPE_OBJECT); o{
+							tsv.valueAsObject()[key] =val
+							j.status =  STATUS_READ_COMMA | STATUS_READ_END_OBJECT
+							continue
+						}
+					}
+				}
+			}
 			if j.hasStatus(STATUS_READ_ARRAY_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
-					temp := sv.ValueAsArray()
-					j.reader.BackToken()
-					if val, err := Parser(j.reader); err != nil {
+				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+					temp := sv.valueAsArray()
+					j.reader.backToken()
+					if val, err := Parse(j.reader); err == nil {
 						temp = append(temp, val)
-						j.stack.Push(NewJsonObjectFromSlice(temp))
+						j.stack.push(newStackValueFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 						continue
-					} else {
-						return nil, err
 					}
 				}
 			}
 			return nil, errors.New("Read { failed at " + strconv.Itoa(r.position()))
 		case START_ARRAY:
 			if j.hasStatus(STATUS_READ_BEGIN_ARRAY) {
-				j.stack.Push(NewJsonObjectFromSlice(j.newArray()))
+				j.stack.push(newStackValueFromSlice(j.newArray()))
 				j.status = STATUS_READ_ARRAY_VALUE
 				continue
 			}
 			if j.hasStatus(STATUS_READ_ARRAY_VALUE) {
-				if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
-					temp := sv.ValueAsArray()
-					j.reader.BackToken()
-					if val, err := Parser(j.reader); err != nil {
+				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+					temp := sv.valueAsArray()
+					j.reader.backToken()
+					if val, err := Parse(j.reader); err != nil {
 						temp = append(temp, val)
-						j.stack.Push(NewJsonObjectFromSlice(temp))
+						j.stack.push(newStackValueFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 						continue
 					} else {
@@ -215,33 +223,33 @@ func Parser(r *TokenReader) (interface{}, error) {
 			return nil, errors.New("Read [ failed at " + strconv.Itoa(r.position()))
 		case END_OBJECT:
 			if j.hasStatus(STATUS_READ_END_OBJECT) {
-				object, _ := j.stack.PopKind(TYPE_OBJECT)
-				if j.stack.IsEmpty() {
-					j.stack.Push(object)
-					if j.reader.IsEmpty() {
+				object, _ := j.stack.popKind(TYPE_OBJECT)
+				if j.stack.isEmpty() {
+					j.stack.push(object)
+					if j.reader.isEmpty() {
 						j.status = STATUS_READ_END_DOCUMENT
 						continue
 					} else {
-						return object.Value, nil
+						return object.value, nil
 					}
 
 				}
-				kind := j.stack.GetTopValueType()
+				kind := j.stack.getTopValueType()
 				if kind == TYPE_OBJECT_KEY {
-					if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
-						key := sv.ValueAsKey()
-						if tsv, o := j.stack.Peek(TYPE_OBJECT); o {
-							tsv.ValueAsObject()[key] = object.Value
+					if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+						key := sv.valueAsKey()
+						if tsv, o := j.stack.peek(TYPE_OBJECT); o {
+							tsv.valueAsObject()[key] = object.value
 							j.status = STATUS_READ_COMMA | STATUS_READ_END_OBJECT
 						}
 					}
 					continue
 				}
 				if kind == TYPE_ARRAY {
-					if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
-						temp := sv.ValueAsArray()
-						temp = append(temp, object.Value)
-						j.stack.Push(NewJsonObjectFromSlice(temp))
+					if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+						temp := sv.valueAsArray()
+						temp = append(temp, object.value)
+						j.stack.push(newStackValueFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 					}
 					continue
@@ -250,32 +258,32 @@ func Parser(r *TokenReader) (interface{}, error) {
 			return nil, errors.New("Read } failed at " + strconv.Itoa(r.position()))
 		case END_ARRAY:
 			if j.hasStatus(STATUS_READ_END_ARRAY) {
-				array, _ := j.stack.PopKind(TYPE_ARRAY)
-				if j.stack.IsEmpty() {
-					j.stack.Push(array)
-					if j.reader.IsEmpty() {
+				array, _ := j.stack.popKind(TYPE_ARRAY)
+				if j.stack.isEmpty() {
+					j.stack.push(array)
+					if j.reader.isEmpty() {
 						j.status = STATUS_READ_END_DOCUMENT
 						continue
 					} else {
-						return array.Value, nil
+						return array.value, nil
 					}
 				}
-				kind := j.stack.GetTopValueType()
+				kind := j.stack.getTopValueType()
 				if kind == TYPE_OBJECT_KEY {
-					if sv, ok := j.stack.PopKind(TYPE_OBJECT_KEY); ok {
-						key := sv.ValueAsKey()
-						if tsv, o := j.stack.Peek(TYPE_OBJECT); o {
-							tsv.ValueAsObject()[key] = array.Value
+					if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
+						key := sv.valueAsKey()
+						if tsv, o := j.stack.peek(TYPE_OBJECT); o {
+							tsv.valueAsObject()[key] = array.value
 							j.status = STATUS_READ_COMMA | STATUS_READ_END_OBJECT
 						}
 					}
 					continue
 				}
 				if kind == TYPE_ARRAY {
-					if sv, ok := j.stack.PopKind(TYPE_ARRAY); ok {
-						temp := sv.ValueAsArray()
-						temp = append(temp, array.Value)
-						j.stack.Push(NewJsonObjectFromSlice(temp))
+					if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
+						temp := sv.valueAsArray()
+						temp = append(temp, array.value)
+						j.stack.push(newStackValueFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
 					}
 					continue
@@ -284,9 +292,9 @@ func Parser(r *TokenReader) (interface{}, error) {
 			return nil, errors.New("Read ] failed at " + strconv.Itoa(r.position()))
 		case END_DOCUMENT:
 			if j.hasStatus(STATUS_READ_END_DOCUMENT) {
-				v, _ := j.stack.Pop()
-				if j.stack.IsEmpty() {
-					return v.Value, nil
+				v, _ := j.stack.pop()
+				if j.stack.isEmpty() {
+					return v.value, nil
 				}
 			}
 			return nil, errors.New("Read document failed at " + strconv.Itoa(r.position()))
