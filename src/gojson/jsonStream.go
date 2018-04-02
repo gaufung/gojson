@@ -19,13 +19,13 @@ const (
 )
 
 type JsonStream struct {
-	reader    *TokenReader
+	reader    *tokenReader
 	stack     *stack
 	lastToken Token
 	status    int
 }
 
-func newJsonStreamFromTokenReader(r *TokenReader) *JsonStream {
+func newJsonStreamFromTokenReader(r *tokenReader) *JsonStream {
 	return &JsonStream{reader: r}
 }
 
@@ -41,7 +41,7 @@ func (j *JsonStream) newArray() []interface{} {
 	return make([]interface{}, 0)
 }
 
-func Parse(r *TokenReader) (interface{}, error) {
+func parse(r *tokenReader) (interface{}, error) {
 	j := newJsonStreamFromTokenReader(r)
 	j.stack = newStack()
 	j.status = STATUS_READ_BEGIN_OBJECT | STATUS_READ_BEGIN_ARRAY
@@ -178,7 +178,7 @@ func Parse(r *TokenReader) (interface{}, error) {
 				if sv, ok := j.stack.popKind(TYPE_OBJECT_KEY); ok {
 					key := sv.valueAsKey()
 					j.reader.backToken()
-					if val, err := Parse(j.reader); err == nil {
+					if val, err := parse(j.reader); err == nil {
 						if tsv, o := j.stack.peek(TYPE_OBJECT); o{
 							tsv.valueAsObject()[key] =val
 							j.status =  STATUS_READ_COMMA | STATUS_READ_END_OBJECT
@@ -191,7 +191,7 @@ func Parse(r *TokenReader) (interface{}, error) {
 				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
 					temp := sv.valueAsArray()
 					j.reader.backToken()
-					if val, err := Parse(j.reader); err == nil {
+					if val, err := parse(j.reader); err == nil {
 						temp = append(temp, val)
 						j.stack.push(newStackValueFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY
@@ -210,7 +210,7 @@ func Parse(r *TokenReader) (interface{}, error) {
 				if sv, ok := j.stack.popKind(TYPE_ARRAY); ok {
 					temp := sv.valueAsArray()
 					j.reader.backToken()
-					if val, err := Parse(j.reader); err != nil {
+					if val, err := parse(j.reader); err != nil {
 						temp = append(temp, val)
 						j.stack.push(newStackValueFromSlice(temp))
 						j.status = STATUS_READ_COMMA | STATUS_READ_END_ARRAY

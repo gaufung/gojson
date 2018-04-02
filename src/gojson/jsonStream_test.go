@@ -6,8 +6,8 @@ import (
 
 func TestJsonStream0(t *testing.T) {
 	var json = `{}`
-	reader := NewTokenReaderFromString(json)
-	if obj, err := Parse(reader); err != nil {
+	reader := newTokenReaderFromString(json)
+	if obj, err := parse(reader); err != nil {
 		t.Error("Parse() error")
 	} else {
 		maps := obj.(map[string]interface{})
@@ -20,8 +20,8 @@ func TestJsonStream0(t *testing.T) {
 func TestJsonStream1(t *testing.T) {
 	var json = `{"name" : "golang", "version":1.9, "companies":["google", "腾讯"],
 		     "verified": true, "user":null}`
-	reader := NewTokenReaderFromString(json)
-	if obj, err:= Parse(reader); err!=nil{
+	reader := newTokenReaderFromString(json)
+	if obj, err:= parse(reader); err!=nil{
 		t.Error(err.Error())
 	}else{
 		maps := obj.(map[string]interface{})
@@ -79,8 +79,8 @@ func TestJsonStream2(t *testing.T) {
 					"scores" : [10.0, -4]
 				}
 		}`
-	reader := NewTokenReaderFromString(json)
-	if obj, err := Parse(reader); err != nil {
+	reader := newTokenReaderFromString(json)
+	if obj, err := parse(reader); err != nil {
 		t.Error("Parse() failed")
 	} else {
 		maps := obj.(map[string]interface{})
@@ -130,8 +130,8 @@ func TestJsonStream3(t *testing.T){
 			]
 		}
 	`
-	reader := NewTokenReaderFromString(json)
-	if obj, err := Parse(reader); err != nil {
+	reader := newTokenReaderFromString(json)
+	if obj, err := parse(reader); err != nil {
 		t.Error("Parse() students failed")
 	}else{
 		students := obj.(map[string]interface{})["students"].([]interface{})
@@ -167,8 +167,8 @@ func TestJsonStream4(t *testing.T) {
 			       ]
 	}
 	`
-	reader := NewTokenReaderFromString(json)
-	if obj, err := Parse(reader); err != nil {
+	reader := newTokenReaderFromString(json)
+	if obj, err := parse(reader); err != nil {
 		t.Error("Parse() stream4 failed: " + err.Error())
 	}else{
 		maps := obj.(map[string]interface{})
@@ -208,5 +208,21 @@ func TestJsonStream4(t *testing.T) {
 				t.Error("companies count failed")
 			}
  		}
+	}
+}
+
+
+func TestJsonStream5(t *testing.T) {
+	var json = `
+	[1,2,3]
+	`
+	reader := newTokenReaderFromString(json)
+	if obj, err:= parse(reader); err!=nil{
+		t.Errorf("Parse failed, %s", err.Error())
+	}else{
+		arr := obj.([]interface{})
+		if len(arr) != 3 || arr[0] != float64(1) || arr[1] != float64(2) || arr[2] != float64(3){
+			t.Error("Parse array failed")
+		}
 	}
 }

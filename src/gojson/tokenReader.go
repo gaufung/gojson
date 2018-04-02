@@ -23,33 +23,33 @@ const (
 	READ_NUMBER_END = 0x0100
 )
 
-type TokenReader struct {
+type tokenReader struct {
 	reader *charReader
 }
 
-func NewTokenReaderFromString(s string) *TokenReader {
-	return NewTokenReader(strings.NewReader(s))
+func newTokenReaderFromString(s string) *tokenReader {
+	return newTokenReader(strings.NewReader(s))
 }
 
-func NewTokenReader(r io.Reader) *TokenReader {
-	return &TokenReader{newCharReader(r)}
+func newTokenReader(r io.Reader) *tokenReader {
+	return &tokenReader{newCharReader(r)}
 }
 
-func (t *TokenReader) position() int {
+func (t *tokenReader) position() int {
 	return t.reader.pos
 }
 
-func (t *TokenReader) errors(info string) error {
+func (t *tokenReader) errors(info string) error {
 	return errors.New(info + " at " + strconv.Itoa(t.position()))
 }
 
 // white space to ignore
-func (t *TokenReader) isWhiteSpace(ch rune) bool {
+func (t *tokenReader) isWhiteSpace(ch rune) bool {
 	return ch == '\n' || ch == '\t' || ch == ' ' || ch == '\r'
 }
 
 // read next token
-func (t *TokenReader) readNextToken() (Token, error) {
+func (t *tokenReader) readNextToken() (Token, error) {
 	ch := '?'
 	for {
 		if !t.reader.hasMore() {
@@ -99,7 +99,7 @@ func (t *TokenReader) readNextToken() (Token, error) {
 }
 
 // read string
-func (t *TokenReader) readString() (string, error) {
+func (t *tokenReader) readString() (string, error) {
 	result := make([]rune, 0)
 	ch := t.reader.next()
 	if ch != '"' {
@@ -156,7 +156,7 @@ func (t *TokenReader) readString() (string, error) {
 }
 
 // read boolean
-func (t *TokenReader) readBoolean() (bool, error) {
+func (t *tokenReader) readBoolean() (bool, error) {
 	ch := t.reader.next()
 	expect := ""
 	if ch == 't' {
@@ -175,7 +175,7 @@ func (t *TokenReader) readBoolean() (bool, error) {
 	return ch == 't', nil
 }
 
-func (t *TokenReader) readNull() error {
+func (t *tokenReader) readNull() error {
 	expect := "null"
 	for _, c := range []rune(expect) {
 		theChar := t.reader.next()
@@ -187,7 +187,7 @@ func (t *TokenReader) readNull() error {
 }
 
 // read number
-func (t *TokenReader) readNumber() (float64, error) {
+func (t *tokenReader) readNumber() (float64, error) {
 	intPart, fraPart, expPart := make([]rune, 0), make([]rune, 0), make([]rune, 0)
 	minusSign, expMinusSign := false, false
 	phase := READ_NUMBER_INT_PART
@@ -340,12 +340,12 @@ func numberToken(ch rune) int {
 }
 
 //back token
-func (t *TokenReader) backToken() {
+func (t *tokenReader) backToken() {
 	t.reader.backward()
 }
 
 //determine whether is empty or not
-func (t *TokenReader) isEmpty() bool {
+func (t *tokenReader) isEmpty() bool {
 	if !t.reader.hasMore() {
 		return true
 	} else {
