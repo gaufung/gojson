@@ -63,3 +63,91 @@ func TestJsonParser(t *testing.T) {
 		}
 	}
 }
+
+type student struct {
+	name   string
+	age    int
+	isMale bool
+	scores []float64
+}
+
+type class struct {
+	name     string
+	students []student
+}
+
+func TestJsonParser1(t *testing.T) {
+	if bytes,err := Encode(nil); err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes) != "null"{
+			t.Error("nil failed")
+		}
+	}
+	if bytes, err:= Encode(10); err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes) != "10"{
+			t.Error("int failed")
+		}
+	}
+	if bytes, err:= Encode(14.2); err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes) != "14.2"{
+			t.Error("float failed")
+		}
+	}
+	if bytes, err:=Encode("123");err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes) != `"123"`{
+			t.Error("string failed")
+		}
+	}
+	if bytes, err:=Encode([]int{1,2,3});err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes) != `[1,2,3]`{
+			t.Error("array failed")
+		}
+	}
+	if bytes, err:=Encode(true);err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes)!="true"{
+			t.Error("bool failed")
+		}
+	}
+	if bytes, err:=Encode(false);err!=nil{
+		t.Error(err.Error())
+	}else{
+		if string(bytes)!="false"{
+			t.Error("bool failed")
+		}
+	}
+	maps := make(map[int]string)
+	if _, err:=Encode(maps); err==nil{
+		t.Error("map success")
+	}
+
+	student1 := student{name:"tom",age:10,isMale:true, scores:[]float64{1.2,3.2}}
+	if bytes, err:=Encode(student1);err!=nil{
+		t.Error(err.Error())
+	}else{
+		expect := `{"name":"tom","age":10,"isMale":true,"scores":[1.2,3.2]}`
+		if string(bytes)!=expect{
+			t.Error("struct failed")
+		}
+	}
+	class1 := class{"Grade1",[]student{student1}}
+	if bytes, err:=Encode(class1);err!=nil{
+		t.Error(err.Error())
+	}else{
+		expect:=`{"name":"Grade1","students":[{"name":"tom","age":10,"isMale":true,"scores":[1.2,3.2]}]}`
+		if string(bytes)!=expect{
+			t.Error("struct failed")
+		}
+	}
+
+}
