@@ -5,6 +5,7 @@ bin/
 pkg/
 .vscode/
 src/debugger.go
+src/debuggerReflect.go
 # Binaries for programs and plugins
 *.exe
 *.dll

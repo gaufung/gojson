@@ -17,6 +17,7 @@ go get -u github/gaufung/gojson
 After installing  `gojson`, you can use it as follow.
 
 ```go
+
 import (
     "io"
     "github/gaufung/gojson"
@@ -44,8 +45,8 @@ var json = `{	"debugger" : false,
                             ]
 	        }`
 func main(){
-    tokenReader := gojson.NewTokenReaderFromString(json)
-    if obj, err := gojson.Parse(tokenReader); err!=nil {
+    parser := gojson.NewJsonParserFromString(json)
+    if obj, err := parser.Parse(); err!=nil {
 		maps := obj.(map[string]interface{})
         fmt.Println(maps["debugger"]) // false
         fmt.Println(maps["companies"]) // [google 腾讯]
@@ -64,6 +65,6 @@ func main(){
 # 3 RoadMap
 
 - [x] Fix nesting json parsing.
-- [ ] Add serialize features.
+- [x] Add serialize features.
 - [ ] Appeal to stack rather than recursion to achive high performance.
 - [ ] Benchmark testing

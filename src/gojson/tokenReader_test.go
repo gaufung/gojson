@@ -8,7 +8,7 @@ import (
 func TestTokenReader1(t *testing.T) {
 	var json = `{"language": "golang", "version":1.9}`
 	reader := newCharReader(strings.NewReader(json))
-	r := &TokenReader{reader}
+	r := &tokenReader{reader}
 	if !r.isWhiteSpace('\t') || !r.isWhiteSpace('\n') || !r.isWhiteSpace(' ') || !r.isWhiteSpace('\r') {
 		t.Error("isWhiteSpace() failed")
 	}
@@ -101,7 +101,7 @@ func TestTokenReader1(t *testing.T) {
 func TestTokeReader2(t *testing.T) {
 	var json = `{"isread": false, "company": [1, 2.5], "leader": null}`
 	reader := newCharReader(strings.NewReader(json))
-	r := &TokenReader{reader}
+	r := &tokenReader{reader}
 	if token, err := r.readNextToken(); err != nil {
 		t.Error("read Token failed")
 	} else {
@@ -264,7 +264,7 @@ func TestTokeReader2(t *testing.T) {
 func TestTokenReader3(t *testing.T) {
 	var json = `{"\\ba": 1.3e2}`
 	reader := newCharReader(strings.NewReader(json))
-	r := &TokenReader{reader}
+	r := &tokenReader{reader}
 	if token, err := r.readNextToken(); err != nil {
 		t.Error("read Token failed")
 	} else {
@@ -311,9 +311,9 @@ func TestTokenReader3(t *testing.T) {
 }
 
 
-func createTokenReaderFromString(str string) *TokenReader{
+func createTokenReaderFromString(str string) *tokenReader {
 	reader := newCharReader(strings.NewReader(str))
-	return &TokenReader{reader}
+	return &tokenReader{reader}
 }
 
 func TestTokeReaderNumber(t *testing.T) {
